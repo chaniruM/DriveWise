@@ -70,50 +70,50 @@ class MyCarsPage extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.directions_car),
-            label: 'My Cars',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.schedule),
-            label: 'Schedules',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-        currentIndex: 1, // Highlight the My Cars tab
-        onTap: (index) {
-          switch (index) {
-            case 0:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => HomePage()),
-              );
-              break;
-            case 1:
-            //stay on cars
-              break;
-            case 2:
-              break;
-            case 3:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => UserDetailsPage()),
-              );
-              break;
-          }
-        },
-      ),
+      // bottomNavigationBar: BottomNavigationBar(
+      //   selectedItemColor: Colors.blue,
+      //   unselectedItemColor: Colors.grey,
+      //   items: const [
+      //     BottomNavigationBarItem(
+      //       icon: Icon(Icons.home),
+      //       label: 'Home',
+      //     ),
+      //     BottomNavigationBarItem(
+      //       icon: Icon(Icons.directions_car),
+      //       label: 'My Cars',
+      //     ),
+      //     BottomNavigationBarItem(
+      //       icon: Icon(Icons.schedule),
+      //       label: 'Schedules',
+      //     ),
+      //     BottomNavigationBarItem(
+      //       icon: Icon(Icons.person),
+      //       label: 'Profile',
+      //     ),
+      //   ],
+      //   currentIndex: 1, // Highlight the My Cars tab
+      //   onTap: (index) {
+      //     switch (index) {
+      //       case 0:
+      //         Navigator.push(
+      //           context,
+      //           MaterialPageRoute(builder: (context) => HomePage()),
+      //         );
+      //         break;
+      //       case 1:
+      //       //stay on cars
+      //         break;
+      //       case 2:
+      //         break;
+      //       case 3:
+      //         Navigator.push(
+      //           context,
+      //           MaterialPageRoute(builder: (context) => UserDetailsPage()),
+      //         );
+      //         break;
+      //     }
+      //   },
+      // ),
     );
   }
 }

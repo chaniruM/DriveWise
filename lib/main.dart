@@ -1,3 +1,4 @@
+import 'package:drivewise/MainPage.dart';
 import 'package:flutter/material.dart';
 import 'pages/home_page.dart';
 
@@ -16,7 +17,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: HomePage(), // Use the HomePage as the default screen.
+      home: MainPage()
+      // home: HomePage(), // Use the HomePage as the default screen.
     );
   }
 }

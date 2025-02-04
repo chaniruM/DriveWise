@@ -1,3 +1,4 @@
+import 'package:drivewise/pages/read_speed.dart';
 import 'package:flutter/material.dart';
 import 'my_cars.dart';
 import 'user_details_page.dart';
@@ -8,23 +9,23 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Center(child: Text('DriveWise App')),
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          onPressed: () {
-            // Handle menu actions
-          },
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              // Navigate to settings
-            },
-          ),
-        ],
-      ),
+      // appBar: AppBar(
+      //   title: const Center(child: Text('DriveWise App')),
+      //   leading: IconButton(
+      //     icon: const Icon(Icons.menu),
+      //     onPressed: () {
+      //       // Handle menu actions
+      //     },
+      //   ),
+      //   actions: [
+      //     IconButton(
+      //       icon: const Icon(Icons.settings),
+      //       onPressed: () {
+      //         // Navigate to settings
+      //       },
+      //     ),
+      //   ],
+      // ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -83,50 +84,60 @@ class HomePage extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.directions_car),
-            label: 'My Cars',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.schedule),
-            label: 'Schedules',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-        currentIndex: 0, // Highlight the home tab by default
-        onTap: (index) {
-          switch (index) {
-            case 0:
-            // Stay on HomePage
-              break;
-            case 1:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => MyCarsPage()),
-              );
-              break;
-            case 2:
-              break;
-            case 3:
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => UserDetailsPage()),
-              );
-              break;
-          }
-        },
-      ),
+    //   bottomNavigationBar: BottomNavigationBar(
+    //     selectedItemColor: Colors.blue,
+    //     unselectedItemColor: Colors.grey,
+    //     items: const [
+    //       BottomNavigationBarItem(
+    //         icon: Icon(Icons.home),
+    //         label: 'Home',
+    //       ),
+    //       BottomNavigationBarItem(
+    //         icon: Icon(Icons.directions_car),
+    //         label: 'My Cars',
+    //       ),
+    //       BottomNavigationBarItem(
+    //         icon: Icon(Icons.schedule),
+    //         label: 'Schedules',
+    //       ),
+    //       BottomNavigationBarItem(
+    //         icon: Icon(Icons.person),
+    //         label: 'Profile',
+    //       ),
+    //       BottomNavigationBarItem(
+    //         icon: Icon(Icons.bluetooth),
+    //         label: 'OBD-II',
+    //       ),
+    //     ],
+    //     currentIndex: 0, // Highlight the home tab by default
+    //     onTap: (index) {
+    //       switch (index) {
+    //         case 0:
+    //         // Stay on HomePage
+    //           break;
+    //         case 1:
+    //           Navigator.push(
+    //             context,
+    //             MaterialPageRoute(builder: (context) => MyCarsPage()),
+    //           );
+    //           break;
+    //         case 2:
+    //           break;
+    //         case 3:
+    //           Navigator.push(
+    //             context,
+    //             MaterialPageRoute(builder: (context) => UserDetailsPage()),
+    //           );
+    //           break;
+    //         case 4:
+    //           Navigator.push(
+    //             context,
+    //             MaterialPageRoute(builder: (context) => OBD2Screen()), // Navigate to OBD-II screen
+    //           );
+    //           break;
+    //       }
+    //     },
+    //   ),
     );
   }
 }
