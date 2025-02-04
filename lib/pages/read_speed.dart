@@ -3,10 +3,6 @@ import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'dart:typed_data';
 import 'package:permission_handler/permission_handler.dart';
 
-// void main() {
-//   runApp(OBD2App());
-// }
-
 class OBD2App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -27,48 +23,42 @@ class _OBD2ScreenState extends State<OBD2Screen> {
   BluetoothDevice? _selectedDevice;
   BluetoothConnection? _connection;
   String _status = "Select a device to connect";
+  List<BluetoothDevice> _devices = [];
 
   @override
   void initState() {
     super.initState();
-    _checkPermissions(); // Request permissions when the app starts
+    _checkPermissionsAndListDevices();
   }
 
-  Future<void> _checkPermissions() async {
-    if (await Permission.location.isDenied) {
-      await Permission.location.request();
+  Future<void> _checkPermissionsAndListDevices() async {
+    if (await _requestBluetoothPermissions()) {
+      _listDevices();
+    }
+  }
+
+  Future<bool> _requestBluetoothPermissions() async {
+    if (await Permission.bluetoothConnect.request().isGranted &&
+        await Permission.bluetoothScan.request().isGranted &&
+        await Permission.location.request().isGranted) {
+      return true;
+    } else {
+      setState(() {
+        _status = "Bluetooth permissions denied.";
+      });
+      return false;
     }
   }
 
   Future<void> _listDevices() async {
-    await FlutterBluetoothSerial.instance.requestEnable(); // Ensure Bluetooth is ON
-    List<BluetoothDevice> devices =
-    await FlutterBluetoothSerial.instance.getBondedDevices();
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Select OBD-II Device"),
-          content: SingleChildScrollView(
-            child: Column(
-              children: devices.map((device) {
-                return ListTile(
-                  title: Text(device.name ?? "Unknown"),
-                  subtitle: Text(device.address),
-                  onTap: () {
-                    setState(() {
-                      _selectedDevice = device;
-                    });
-                    Navigator.pop(context);
-                  },
-                );
-              }).toList(),
-            ),
-          ),
-        );
-      },
-    );
+    try {
+      List<BluetoothDevice> devices = await FlutterBluetoothSerial.instance.getBondedDevices();
+      setState(() {
+        _devices = devices;
+      });
+    } catch (e) {
+      print("Error listing Bluetooth devices: $e");
+    }
   }
 
   Future<void> _connectToOBD() async {
@@ -80,17 +70,13 @@ class _OBD2ScreenState extends State<OBD2Screen> {
     }
 
     try {
-      BluetoothConnection connection =
-      await BluetoothConnection.toAddress(_selectedDevice!.address);
-
+      BluetoothConnection connection = await BluetoothConnection.toAddress(_selectedDevice!.address);
       setState(() {
         _connection = connection;
         _status = "Connected to ${_selectedDevice!.name}";
       });
-
       print("Connected to OBD-II Scanner");
 
-      // Listen for incoming data (optional)
       _connection!.input!.listen((Uint8List data) {
         print('Received data: ${String.fromCharCodes(data)}');
       });
@@ -121,6 +107,22 @@ class _OBD2ScreenState extends State<OBD2Screen> {
             ElevatedButton(
               onPressed: _listDevices,
               child: Text("Select Device"),
+            ),
+            SizedBox(height: 10),
+            DropdownButton<BluetoothDevice>(
+              hint: Text("Select a Device"),
+              value: _selectedDevice,
+              items: _devices.map((device) {
+                return DropdownMenuItem(
+                  value: device,
+                  child: Text(device.name ?? "Unknown"),
+                );
+              }).toList(),
+              onChanged: (device) {
+                setState(() {
+                  _selectedDevice = device;
+                });
+              },
             ),
             SizedBox(height: 10),
             ElevatedButton(
