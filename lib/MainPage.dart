@@ -5,6 +5,8 @@ import 'pages/read_speed.dart'; // OBD2Screen
 import 'pages/home_page.dart'; // HomePage
 
 
+
+
 class MainPage extends StatefulWidget {
   @override
   _MainPageState createState() => _MainPageState();
@@ -18,6 +20,7 @@ class _MainPageState extends State<MainPage> {
     MyCarsPage(),     // My Cars Page
     OBD2Screen(),     // OBD-II Page
     UserDetailsPage() // User Profile Page
+
   ];
 
   @override
@@ -77,15 +80,16 @@ class _MainPageState extends State<MainPage> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.store,color: Colors.orange,),
-              title: const Text('Register Supplier'),
+              leading: const Icon(Icons.store, color: Colors.orange),
+              title: const Text('Quick Lookup'),
               onTap: () {
                 setState(() {
-                  _currentIndex = 1;
+                  _currentIndex = 1; // Correct for Quick Lookup (matches _pages[1])
                 });
                 Navigator.pop(context);
               },
             ),
+
 
             ListTile(
               leading: const Icon(Icons.directions_car,color: Colors.orange,),
@@ -99,7 +103,7 @@ class _MainPageState extends State<MainPage> {
             ),
             ListTile(
               leading: const Icon(Icons.login,color: Colors.orange,),
-              title: const Text('Supplier Login'),
+              title: const Text('SupplierLogin'),
               onTap: () {
                 setState(() {
                   _currentIndex = 3;
@@ -177,14 +181,7 @@ class _MainPageState extends State<MainPage> {
                 Navigator.pop(context);
               },
             ),
-            // const Divider(),
-            // ListTile(
-            //   leading: const Icon(Icons.info),
-            //   title: const Text('About'),
-            //   onTap: () {
-            //     // Navigate to About page (implement this)
-            //   },
-            // ),
+
           ],
         ),
       ),
