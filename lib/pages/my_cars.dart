@@ -12,7 +12,6 @@ class MyCarsPage extends StatelessWidget {
         title: const Text('My Cars'),
       ),
       body: Padding(
-
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
