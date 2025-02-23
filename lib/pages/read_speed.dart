@@ -219,7 +219,15 @@ class _OBD2ScreenState extends State<OBD2Screen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("OBD-II Connection Test")),
+      appBar: AppBar(
+        title: Text(
+          'OBD-II Connection Test',
+          style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.white
+          ),
+        )
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
