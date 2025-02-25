@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/vehicle.dart';
+// import 'package:drivewise/pages/maintenance_overview.dart';
+import 'package:drivewise/pages/MaintenanceOverview.dart';
+
+
 
 class VehicleDetailsPage extends StatelessWidget {
   final Vehicle vehicle;
@@ -67,7 +71,6 @@ class VehicleDetailsPage extends StatelessWidget {
                   // Service Records Button
                   ElevatedButton(
                     onPressed: () {
-                      // This would navigate to the service records page
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Service Records will be implemented in the next phase')),
                       );
@@ -77,6 +80,27 @@ class VehicleDetailsPage extends StatelessWidget {
                     ),
                     child: Text('Service Records'),
                   ),
+
+                  SizedBox(height: 16), // Space between buttons
+
+
+// Inside the Widget tree, update the "View Products" button
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MaintenanceOverview(vehicle: vehicle),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      minimumSize: Size(double.infinity, 50),
+                    ),
+                    child: Text('View Products', style: TextStyle(color: Colors.white)),
+                  ),
+
                   SizedBox(height: 24),
                 ],
               ),
