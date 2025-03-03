@@ -5,7 +5,6 @@ import 'pages/my_cars.dart';
 import 'pages/user_details_page.dart';
 import 'pages/read_speed.dart';
 import 'pages/home_page.dart';
-import 'pages/quick_lookup_screen.dart';
 
 
 class MainPage extends StatefulWidget {
@@ -21,7 +20,6 @@ class _MainPageState extends State<MainPage> {
     MyCarsPage(),       // My Cars
     OBD2Screen(),       // OBD-2
     UserDetailsPage(),  // Profile page
-    QuickLookupScreen(),// Quick Lookup page
   ];
 
   void _onPageSelected(int index) {
@@ -91,8 +89,8 @@ class _MainPageState extends State<MainPage> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.store, color: Colors.orange),
-              title: const Text('Quick Lookup'),
+              leading: const Icon(Icons.history, color: Colors.orange),
+              title: const Text('History'),
               onTap: () {
                 _onPageSelected(4);
                 Navigator.pop(context);
