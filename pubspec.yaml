@@ -62,9 +62,11 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/logo.png
-
+    - assets/images/logo3d.png
     - assets/animations/car_animation.json
     - assets/images/car.png
+    - assets/images/splash_background.jpg
+    - assets/images/google_logo.png
 
 
 
