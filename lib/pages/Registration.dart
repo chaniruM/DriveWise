@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
+
 import '../theme/app_text_styles.dart';
 
+
+class AppColors {
+  static const Color primary = Color(0xFF030B23);
+  static const Color white = Color(0xFFFFFFFF);
+  static const Color black = Color(0xFF000000);
+  static const Color inputBackground = Color(0xFFFAF7EB);
+  static const Color shadow = Color(0x40000000);
+}
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({Key? key}) : super(key: key);
 
