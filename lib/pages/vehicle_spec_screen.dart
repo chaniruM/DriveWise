@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'quick_lookup_screen.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -27,8 +28,27 @@ class VehicleSpecScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('$make $model $year')),
-      body: SingleChildScrollView( // Allows scrolling for smaller screens
+      appBar: AppBar(
+        title: Text(
+          'DriveWise',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 26,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+        backgroundColor: Color(0xFF030B23),
+        iconTheme: const IconThemeData(color: Colors.white),
+        // Ensures the back button is visible
+        titleTextStyle: const TextStyle(color: Colors.white, fontSize: 18),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context); // Goes back to the previous screen
+          },
+        ),
+      ),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -40,7 +60,8 @@ class VehicleSpecScreen extends StatelessWidget {
             Center(
               child: Text(
                 '$make $model $year',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ),
             Image.asset(
