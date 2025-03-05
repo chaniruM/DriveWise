@@ -48,7 +48,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^4.0.0
+  flutter_lints: ^5.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -65,8 +65,12 @@ flutter:
     - assets/images/logo3d.png
     - assets/animations/car_animation.json
     - assets/images/car.png
-    - assets/images/splash_background.jpg
     - assets/images/google_logo.png
+    - assets/images/engine_oil.jpg.png
+    - assets/images/toyota.png
+    - assets/images/valvoline.png
+    - assets/images/lukoil.png
+    - assets/images/mobil.png
 
 
 
