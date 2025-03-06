@@ -37,6 +37,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_bluetooth_serial: ^0.4.0
   permission_handler: ^11.3.1
+  lottie: ^3.2.0
+  google_fonts: ^6.1.0  # Use the latest version
 
 dev_dependencies:
   flutter_test:
@@ -59,6 +61,15 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+  assets:
+    - assets/images/logo.png
+
+    - assets/animations/car_animation.json
+    - assets/images/car.png
+
+
+
+
 
   # To add assets to your application, add an assets section, like this:
   # assets:
