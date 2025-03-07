@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/vehicle.dart';
 // import 'package:drivewise/pages/maintenance_overview.dart';
 import 'package:drivewise/pages/MaintenanceOverview.dart';
-
+import 'package:drivewise/pages/product_reco.dart';
 
 
 class VehicleDetailsPage extends StatelessWidget {
@@ -90,16 +90,17 @@ class VehicleDetailsPage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => MaintenanceOverview(vehicle: vehicle),
+                          builder: (context) => const ProductRec(), // No parameters needed
                         ),
                       );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange,
-                      minimumSize: Size(double.infinity, 50),
+                      minimumSize: const Size(double.infinity, 50),
                     ),
-                    child: Text('View Products', style: TextStyle(color: Colors.white)),
+                    child: const Text('View Products', style: TextStyle(color: Colors.white)),
                   ),
+
 
                   SizedBox(height: 24),
                 ],
