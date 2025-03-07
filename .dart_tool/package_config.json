@@ -3,7 +3,7 @@
   "packages": [
     {
       "name": "archive",
-      "rootUri": "file:///C:/Users/Ravindi/AppData/Local/Pub/Cache/hosted/pub.dev/archive-3.6.1",
+      "rootUri": "file:///C:/Users/Ravindi/AppData/Local/Pub/Cache/hosted/pub.dev/archive-4.0.4",
       "packageUri": "lib/",
       "languageVersion": "3.0"
     },
@@ -147,9 +147,9 @@
     },
     {
       "name": "http_parser",
-      "rootUri": "file:///C:/Users/Ravindi/AppData/Local/Pub/Cache/hosted/pub.dev/http_parser-4.0.2",
+      "rootUri": "file:///C:/Users/Ravindi/AppData/Local/Pub/Cache/hosted/pub.dev/http_parser-4.1.2",
       "packageUri": "lib/",
-      "languageVersion": "2.12"
+      "languageVersion": "3.4"
     },
     {
       "name": "leak_tracker",
@@ -177,9 +177,9 @@
     },
     {
       "name": "lottie",
-      "rootUri": "file:///C:/Users/Ravindi/AppData/Local/Pub/Cache/hosted/pub.dev/lottie-3.2.0",
+      "rootUri": "file:///C:/Users/Ravindi/AppData/Local/Pub/Cache/hosted/pub.dev/lottie-3.3.1",
       "packageUri": "lib/",
-      "languageVersion": "3.2"
+      "languageVersion": "3.6"
     },
     {
       "name": "matcher",
@@ -250,6 +250,12 @@
     {
       "name": "plugin_platform_interface",
       "rootUri": "file:///C:/Users/Ravindi/AppData/Local/Pub/Cache/hosted/pub.dev/plugin_platform_interface-2.1.8",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "posix",
+      "rootUri": "file:///C:/Users/Ravindi/AppData/Local/Pub/Cache/hosted/pub.dev/posix-6.0.1",
       "packageUri": "lib/",
       "languageVersion": "3.0"
     },
@@ -338,7 +344,7 @@
       "languageVersion": "3.5"
     }
   ],
-  "generated": "2025-03-07T08:51:10.231605Z",
+  "generated": "2025-03-07T09:08:44.152682Z",
   "generator": "pub",
   "generatorVersion": "3.6.2",
   "flutterRoot": "file:///C:/Users/Ravindi/flutter/src/flutter",
