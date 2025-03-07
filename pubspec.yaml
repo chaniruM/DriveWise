@@ -35,7 +35,7 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
-  flutter_bluetooth_serial: ^0.4.0
+  flutter_blue_plus: ^1.35.0
   permission_handler: ^11.3.1
   lottie: ^3.2.0
   google_fonts: ^6.1.0  # Use the latest version
@@ -63,9 +63,11 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/logo.png
-
+    - assets/images/logo3d.png
     - assets/animations/car_animation.json
     - assets/images/car.png
+    - assets/images/splash_background.jpg
+    - assets/images/google_logo.png
 
 
 

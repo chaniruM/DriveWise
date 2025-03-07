@@ -24,7 +24,8 @@
 
 
 import 'package:flutter/material.dart';
-import 'MainPage.dart';
+import 'package:drivewise/pages/login_screen.dart';
+
 
 void main() {
   runApp(MyApp());
@@ -60,7 +61,7 @@ class MyApp extends StatelessWidget {
           titleLarge: TextStyle(color: primaryDarkBlue, fontWeight: FontWeight.bold),
         ),
       ),
-      home: MainPage(),
+      home: LoginScreen(),
     );
   }
 }

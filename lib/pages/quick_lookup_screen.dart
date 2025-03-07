@@ -32,6 +32,19 @@ class _QuickLookupScreenState extends State<QuickLookupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Color(0xFF030B23),
+        title: Text(
+          'DriveWise',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 26,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
       backgroundColor: const Color(0xFF0D1128),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -41,10 +54,9 @@ class _QuickLookupScreenState extends State<QuickLookupScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 10),
                 const Text(
                   'Quick Lookup',
-                  style: TextStyle(fontSize: 18, color: Colors.white),
+                  style: TextStyle(fontSize: 15, color: Colors.white),
                 ),
                 SizedBox(
                   height: 170,
