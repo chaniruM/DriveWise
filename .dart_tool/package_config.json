@@ -206,6 +206,12 @@
       "languageVersion": "3.0"
     },
     {
+      "name": "path_provider_windows",
+      "rootUri": "file:///C:/Users/ASUS/AppData/Local/Pub/Cache/hosted/pub.dev/path_provider_windows-2.3.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
       "name": "permission_handler",
       "rootUri": "file:///Users/chanirumannapperuma/.pub-cache/hosted/pub.dev/permission_handler-11.4.0",
       "packageUri": "lib/",
