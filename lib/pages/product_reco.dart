@@ -17,6 +17,84 @@ class _ProductRecState extends State<ProductRec> {
     Navigator.pop(context);
   }
 
+  // Reusable widget for product grid items
+  Widget productGrid(List<String> imagePaths, List<String> productNames) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 3,
+      crossAxisSpacing: 20,
+      mainAxisSpacing: 20,
+      childAspectRatio: 0.6,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      children: List.generate(imagePaths.length, (index) {
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            gradient: const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF000000),
+                Color(0xFF9F4A19),
+                Color(0xFFE95B15),
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 6,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(9.0),
+                  child: Image.asset(imagePaths[index], fit: BoxFit.contain),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE95B15),
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(15),
+                    bottom: Radius.circular(15),
+                  ),
+                ),
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  productNames[index],
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }),
+    );
+  }
+
+  // Reusable section for category with grid
+  Widget categorySection(String category, String imagePath, List<String> imagePaths, List<String> productNames) {
+    return Column(
+      children: [
+        CategorySection(title: category, imagePath: imagePath),
+        const SectionTitle(title: 'Products'),
+        productGrid(imagePaths, productNames),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,136 +105,85 @@ class _ProductRecState extends State<ProductRec> {
           children: [
             SearchAndFilterBar(onFilterSelected: updateCategory),
 
-
             if (selectedCategory == 'All' || selectedCategory == 'Engine Oil') ...[
-              CategorySection(title: 'Engine Oil', imagePath: 'assets/images/engine_oil.jpg.png'),
-              const SectionTitle(title: 'Products'),
-              GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 3,
-                crossAxisSpacing: 20,
-                mainAxisSpacing: 20,
-                childAspectRatio: 0.6,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: List.generate(5, (index) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(18),
-                      gradient: const LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Color(0xFF000000),
-                          Color(0xFF9F4A19),
-                          Color(0xFFE95B15),
-                        ],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 6,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.all(9.0),
-                              child: Image.asset(
-                                'assets/images/toyota_motor_oil.png',
-                                fit: BoxFit.contain,
-
-                              ),
-                            ),
-                          ),
-
-
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFE95B15), // Matching orange color
-                            borderRadius: BorderRadius.vertical(
-                              top: Radius.circular(15),
-                              bottom: Radius.circular(15), // Rounded bottom corners
-                            ),
-                          ),
-                          alignment: Alignment.centerLeft,
-                          child: const Text(
-                            'Toyota Motor Oil 10W30',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-
-
-                }),
-              ),
-            ],
-
-            const SizedBox(height: 40),
-            if (selectedCategory == 'All' || selectedCategory == 'Transmission Oil') ...[
-              CategorySection(title: 'Transmission Oil', imagePath: 'assets/images/transmission_oil.png'),
-              const SectionTitle(title: 'Products'),
-              BrandGrid(images: [
-                'assets/images/castrol.png',
-                'assets/images/liqui_moly.png',
-                'assets/images/shell.png',
-                'assets/images/total.png',
-                'assets/images/motul.png',
+              categorySection('Engine Oil', 'assets/images/engine_oil.jpg.png', [
+                'assets/images/toyota_motor_oil.png',
+                'assets/images/another_image_1.png',
+                'assets/images/another_image_2.png',
+                'assets/images/another_image_3.png',
+                'assets/images/another_image_4.png',
+              ], [
+                'Toyota Motor Oil 10W30',
+                'Product 2',
+                'Product 3',
+                'Product 4',
+                'Product 5',
               ]),
             ],
-            const SizedBox(height: 30),
+
+            if (selectedCategory == 'All' || selectedCategory == 'Transmission Oil') ...[
+              categorySection('Transmission Oil', 'assets/images/transmission_oil.png', [
+                'assets/images/Toyota_WS_AT_Fluid.png',
+                'assets/images/another_image_1.png',
+                'assets/images/another_image_2.png',
+                'assets/images/another_image_3.png',
+                'assets/images/another_image_4.png',
+              ], [
+                'Toyota WS AT Fluid',
+                'Product 2',
+                'Product 3',
+                'Product 4',
+                'Product 5',
+              ]),
+            ],
 
             if (selectedCategory == 'All' || selectedCategory == 'Oil Filters') ...[
-              CategorySection(title: 'Oil Filters', imagePath: 'assets/images/oil_filters.jpg'),
-              const SectionTitle(title: 'Products'),
-              BrandGrid(images: [
-                'assets/images/castrol.png',
-                'assets/images/liqui_moly.png',
-                'assets/images/shell.png',
-                'assets/images/total.png',
-                'assets/images/motul.png',
+              categorySection('Oil Filters', 'assets/images/oil_filters.jpg', [
+                'assets/images/oil_filter_90915-10003.png',
+                'assets/images/another_image_1.png',
+                'assets/images/another_image_2.png',
+                'assets/images/another_image_3.png',
+                'assets/images/another_image_4.png',
+              ], [
+                '90915-10003',
+                'Product 2',
+                'Product 3',
+                'Product 4',
+                'Product 5',
               ]),
             ],
-            const SizedBox(height: 20),
 
             if (selectedCategory == 'All' || selectedCategory == 'Tyres') ...[
-              CategorySection(title: 'Tyres', imagePath: 'assets/images/tyres.jpg'),
-              const SectionTitle(title: 'Products'),
-              BrandGrid(images: [
-                'assets/images/castrol.png',
-                'assets/images/liqui_moly.png',
-                'assets/images/shell.png',
-                'assets/images/total.png',
-                'assets/images/motul.png',
+              categorySection('Tyres', 'assets/images/tyres.jpg', [
+                'assets/images/185/65/15.png',
+                'assets/images/another_image_1.png',
+                'assets/images/another_image_2.png',
+                'assets/images/another_image_3.png',
+                'assets/images/another_image_4.png',
+              ], [
+                '185/65/15',
+                'Product 2',
+                'Product 3',
+                'Product 4',
+                'Product 5',
               ]),
             ],
-            const SizedBox(height: 10),
 
             if (selectedCategory == 'All' || selectedCategory == 'Break Fluid') ...[
-              CategorySection(title: 'Break Fluid', imagePath: 'assets/images/break_fluid.png'),
-              const SectionTitle(title: 'Products'),
-              BrandGrid(images: [
-                'assets/images/castrol.png',
-                'assets/images/liqui_moly.png',
-                'assets/images/shell.png',
-                'assets/images/total.png',
-                'assets/images/motul.png',
+              categorySection('Break Fluid', 'assets/images/break_fluid.png', [
+                'assets/images/Dot_3.png',
+                'assets/images/another_image_1.png',
+                'assets/images/another_image_2.png',
+                'assets/images/another_image_3.png',
+                'assets/images/another_image_4.png',
+              ], [
+                'Dot 3',
+                'Product 2',
+                'Product 3',
+                'Product 4',
+                'Product 5',
               ]),
             ],
-
-            const SizedBox(height: 10),
-
           ],
         ),
       ),
@@ -302,13 +329,17 @@ class SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
-      child: Text(
-        title,
-        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.orange),
+      child: Align(
+        alignment: Alignment.centerLeft, // Align to the left
+        child: Text(
+          title,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+        ),
       ),
     );
   }
 }
+
 
 class BrandGrid extends StatelessWidget {
   final List<String> images;
