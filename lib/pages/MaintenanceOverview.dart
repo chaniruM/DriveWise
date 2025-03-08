@@ -102,7 +102,7 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                ElevatedButton(onPressed: () {}, child: const Text('Use OBD-II')),
+
                 ElevatedButton(onPressed: () {}, child: const Text('Open Camera')),
               ],
             ),
