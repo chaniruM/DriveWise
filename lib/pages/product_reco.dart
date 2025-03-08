@@ -26,17 +26,83 @@ class _ProductRecState extends State<ProductRec> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SearchAndFilterBar(onFilterSelected: updateCategory),
+
+
             if (selectedCategory == 'All' || selectedCategory == 'Engine Oil') ...[
               CategorySection(title: 'Engine Oil', imagePath: 'assets/images/engine_oil.jpg.png'),
               const SectionTitle(title: 'Products'),
-              BrandGrid(images: [
-                'assets/images/toyota.png',
-                'assets/images/valvoline.png',
-                'assets/images/lukoil.png',
-                'assets/images/mobil.png',
-                'assets/images/caltex.png',
-              ]),
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 3,
+                crossAxisSpacing: 20,
+                mainAxisSpacing: 20,
+                childAspectRatio: 0.6,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: List.generate(5, (index) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(18),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0xFF000000),
+                          Color(0xFF9F4A19),
+                          Color(0xFFE95B15),
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 6,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(9.0),
+                              child: Image.asset(
+                                'assets/images/toyota_motor_oil.png',
+                                fit: BoxFit.contain,
+
+                              ),
+                            ),
+                          ),
+
+
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFE95B15), // Matching orange color
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(15),
+                              bottom: Radius.circular(15), // Rounded bottom corners
+                            ),
+                          ),
+                          alignment: Alignment.centerLeft,
+                          child: const Text(
+                            'Toyota Motor Oil 10W30',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+
+
+                }),
+              ),
             ],
+
             const SizedBox(height: 40),
             if (selectedCategory == 'All' || selectedCategory == 'Transmission Oil') ...[
               CategorySection(title: 'Transmission Oil', imagePath: 'assets/images/transmission_oil.png'),
@@ -90,9 +156,6 @@ class _ProductRecState extends State<ProductRec> {
             ],
 
             const SizedBox(height: 10),
-
-
-
 
           ],
         ),
