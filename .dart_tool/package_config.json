@@ -62,6 +62,12 @@
       "languageVersion": "3.4"
     },
     {
+      "name": "crypto",
+      "rootUri": "file:///Users/chanirumannapperuma/.pub-cache/hosted/pub.dev/crypto-3.0.6",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
       "name": "cupertino_icons",
       "rootUri": "file:///C:/Users/Senath/AppData/Local/Pub/Cache/hosted/pub.dev/cupertino_icons-1.0.8",
       "packageUri": "lib/",
@@ -194,6 +200,7 @@
       "languageVersion": "2.12"
     },
     {
+
       "name": "image_picker",
       "rootUri": "file:///C:/Users/Senath/AppData/Local/Pub/Cache/hosted/pub.dev/image_picker-1.1.2",
       "packageUri": "lib/",
@@ -242,6 +249,7 @@
       "languageVersion": "2.19"
     },
     {
+
       "name": "leak_tracker",
       "rootUri": "file:///C:/Users/Senath/AppData/Local/Pub/Cache/hosted/pub.dev/leak_tracker-10.0.7",
       "packageUri": "lib/",
@@ -270,6 +278,7 @@
       "rootUri": "file:///C:/Users/Senath/AppData/Local/Pub/Cache/hosted/pub.dev/lottie-3.3.1",
       "packageUri": "lib/",
       "languageVersion": "3.6"
+
     },
     {
       "name": "matcher",
@@ -452,6 +461,12 @@
       "languageVersion": "3.5"
     },
     {
+      "name": "typed_data",
+      "rootUri": "file:///Users/chanirumannapperuma/.pub-cache/hosted/pub.dev/typed_data-1.4.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
       "name": "vector_math",
       "rootUri": "file:///C:/Users/Senath/AppData/Local/Pub/Cache/hosted/pub.dev/vector_math-2.1.4",
       "packageUri": "lib/",
@@ -466,6 +481,7 @@
     {
       "name": "web",
       "rootUri": "file:///C:/Users/Senath/AppData/Local/Pub/Cache/hosted/pub.dev/web-1.1.1",
+
       "packageUri": "lib/",
       "languageVersion": "3.4"
     },
@@ -489,6 +505,7 @@
     }
   ],
   "generated": "2025-03-08T06:34:28.568979Z",
+
   "generator": "pub",
   "generatorVersion": "3.6.1",
   "flutterRoot": "file:///C:/src/flutter_windows_3.27.3-stable/flutter",

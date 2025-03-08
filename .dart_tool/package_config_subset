@@ -1,7 +1,9 @@
 archive
 3.0
+
 file:///C:/Users/Senath/AppData/Local/Pub/Cache/hosted/pub.dev/archive-4.0.4/
 file:///C:/Users/Senath/AppData/Local/Pub/Cache/hosted/pub.dev/archive-4.0.4/lib/
+
 args
 3.3
 file:///C:/Users/Senath/AppData/Local/Pub/Cache/hosted/pub.dev/args-2.6.0/
@@ -38,6 +40,7 @@ crypto
 3.4
 file:///C:/Users/Senath/AppData/Local/Pub/Cache/hosted/pub.dev/crypto-3.0.6/
 file:///C:/Users/Senath/AppData/Local/Pub/Cache/hosted/pub.dev/crypto-3.0.6/lib/
+
 cupertino_icons
 3.1
 file:///C:/Users/Senath/AppData/Local/Pub/Cache/hosted/pub.dev/cupertino_icons-1.0.8/
@@ -146,6 +149,7 @@ image_picker_windows
 2.19
 file:///C:/Users/Senath/AppData/Local/Pub/Cache/hosted/pub.dev/image_picker_windows-0.2.1+1/
 file:///C:/Users/Senath/AppData/Local/Pub/Cache/hosted/pub.dev/image_picker_windows-0.2.1+1/lib/
+
 leak_tracker
 3.2
 file:///C:/Users/Senath/AppData/Local/Pub/Cache/hosted/pub.dev/leak_tracker-10.0.7/
@@ -282,6 +286,7 @@ typed_data
 3.5
 file:///C:/Users/Senath/AppData/Local/Pub/Cache/hosted/pub.dev/typed_data-1.4.0/
 file:///C:/Users/Senath/AppData/Local/Pub/Cache/hosted/pub.dev/typed_data-1.4.0/lib/
+
 vector_math
 2.14
 file:///C:/Users/Senath/AppData/Local/Pub/Cache/hosted/pub.dev/vector_math-2.1.4/
