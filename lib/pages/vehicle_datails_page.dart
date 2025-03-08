@@ -98,11 +98,32 @@ class VehicleDetailsPage extends StatelessWidget {
                       backgroundColor: Colors.orange,
                       minimumSize: const Size(double.infinity, 50),
                     ),
+                    child: const Text('Add Service Details', style: TextStyle(color: Colors.white)),
+                  ),
+
+
+                  SizedBox(height: 24),
+
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProductRec(), // No parameters needed
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
+                      minimumSize: const Size(double.infinity, 50),
+                    ),
                     child: const Text('View Products', style: TextStyle(color: Colors.white)),
                   ),
 
 
                   SizedBox(height: 24),
+
+
                 ],
               ),
             ),
