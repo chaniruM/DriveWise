@@ -1,7 +1,7 @@
 #!/bin/sh
 # This is a generated file; do not edit or check into version control.
-export "FLUTTER_ROOT=/Users/chanirumannapperuma/development/flutter"
-export "FLUTTER_APPLICATION_PATH=/Users/chanirumannapperuma/Documents/SDGP/DriveWise"
+export "FLUTTER_ROOT=C:\Flutter\Src\flutter"
+export "FLUTTER_APPLICATION_PATH=D:\DriveWise"
 export "COCOAPODS_PARALLEL_CODE_SIGN=true"
 export "FLUTTER_TARGET=/Users/chanirumannapperuma/Documents/SDGP/DriveWise/lib/main.dart"
 export "FLUTTER_BUILD_DIR=build"
