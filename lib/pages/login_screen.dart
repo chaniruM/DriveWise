@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:drivewise/MainPage.dart';
 import 'package:drivewise/pages/quick_lookup_screen.dart';
+import 'package:drivewise/pages/Regestration_Page.dart';
+
 
 void main() {
   runApp(DriveWiseApp());
@@ -138,7 +140,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     SizedBox(height: 10),
-                    TextButton(onPressed: (){},
+                    TextButton(onPressed: (){
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => RegistrationScreen()),
+                      );
+                    },
                         child: Text(
                           "Don't have an account? Register",
                           style: TextStyle(color: Colors.white70),
