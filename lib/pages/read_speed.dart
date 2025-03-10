@@ -102,12 +102,6 @@ class _OBD2ScreenState extends State<OBD2Screen> {
   // }
 
   Future<void> _listDevices() async {
-    // if (_bluetoothState != BluetoothAdapterState.on) {
-    //   setState(() {
-    //     _status = "Bluetooth is off. Please enable Bluetooth.";
-    //   });
-    //   return;
-    // }
 
     FlutterBluePlus.startScan(
       withServices: [],
@@ -213,26 +207,28 @@ class _OBD2ScreenState extends State<OBD2Screen> {
       // setState(() => _distance = "Distance: ${_totalDistance.toStringAsFixed(2)} m");
       // Check if target distance is reached
       if (distanceInKilometers >= targetDistance) {
-        // _showTargetReachedNotification();
+        NotiService().showNotification(
+          title: 'Service due!',
+          body: 'You have reached your target distance of $targetDistance km',
+        );
       }
     }
   }
 
-  void testNotification(){
-    _totalDistance += 50;
-
-    final distanceInKilometers = _totalDistance / 1000;
-    setState(() => _distance = "Distance: ${distanceInKilometers.toStringAsFixed(2)} km");
-    // setState(() => _distance = "Distance: ${_totalDistance.toStringAsFixed(2)} m");
-    // Check if target distance is reached
-    if (distanceInKilometers >= targetDistance) {
-      NotiService().showNotification(
-        title: 'Service due!',
-        body: 'You have reached your target distance of $targetDistance km',
-      );
-      // _showTargetReachedNotification();
-    }
-  }
+  // void testNotification(){
+  //   _totalDistance += 50;
+  //
+  //   final distanceInKilometers = _totalDistance / 1000;
+  //   setState(() => _distance = "Distance: ${distanceInKilometers.toStringAsFixed(2)} km");
+  //   // setState(() => _distance = "Distance: ${_totalDistance.toStringAsFixed(2)} m");
+  //   // Check if target distance is reached
+  //   if (distanceInKilometers >= targetDistance) {
+  //     NotiService().showNotification(
+  //       title: 'Service due!',
+  //       body: 'You have reached your target distance of $targetDistance km',
+  //     );
+  //   }
+  // }
 
   void _toggleMeasurement() {
     setState(() {
@@ -248,8 +244,8 @@ class _OBD2ScreenState extends State<OBD2Screen> {
 
   Future<void> _startContinuousReading() async {
     while (_isMeasuring) {
-      // await _sendOBDCommand("010D\r");
-      testNotification();
+      await _sendOBDCommand("010D\r");
+      // testNotification();
       await Future.delayed(Duration(milliseconds: 500));
     }
   }
