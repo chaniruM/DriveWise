@@ -5,6 +5,8 @@ import 'pages/my_cars.dart';
 import 'pages/user_details_page.dart';
 import 'pages/read_speed.dart';
 import 'pages/home_page.dart';
+import 'pages/settings_screen.dart';
+import 'pages/login_screen.dart';
 
 
 class MainPage extends StatefulWidget {
@@ -51,13 +53,17 @@ class _MainPageState extends State<MainPage> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () {
-              // Navigate to settings page (implement this)
+          GestureDetector(
+            onTap: () {
+
             },
+            child: CircleAvatar(
+              backgroundColor: Colors.orange,
+              child: Icon(Icons.person, color: Colors.white),
+            ),
           ),
         ],
+
       ),
 
       drawer: Drawer(
@@ -120,14 +126,32 @@ class _MainPageState extends State<MainPage> {
                 Navigator.pop(context);
               },
             ),
+
+            ListTile(
+              leading: const Icon(Icons.settings, color: Colors.orange),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SettingsScreen()),
+                );
+              },
+            ),
+
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.orange),
               title: const Text('Log Out'),
               onTap: () {
-                _onPageSelected(8);
-                Navigator.pop(context);
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                      (route) => false, // Removes all previous routes from the stack
+                );
               },
             ),
+
+
+
           ],
         ),
       ),
