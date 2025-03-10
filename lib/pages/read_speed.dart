@@ -1,5 +1,7 @@
+import 'package:drivewise/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:convert';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:typed_data';
@@ -20,6 +22,8 @@ class OBD2Screen extends StatefulWidget {
 
 class _OBD2ScreenState extends State<OBD2Screen> {
   final FlutterBluePlus flutterBlue = FlutterBluePlus();
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  double targetDistance = 1.0;
   BluetoothDevice? _selectedDevice;
   BluetoothCharacteristic? _writeCharacteristic;
   BluetoothCharacteristic? _readCharacteristic;
@@ -35,9 +39,28 @@ class _OBD2ScreenState extends State<OBD2Screen> {
   @override
   void initState() {
     super.initState();
-    _checkPermissionsAndListDevices();
+    _requestPermissions();
+    // _checkPermissionsAndListDevices();
     _monitorBluetoothState();
+    _listDevices();
   }
+
+  Future<bool> _requestPermissions() async {
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.bluetooth,
+      Permission.bluetoothConnect,
+      Permission.bluetoothScan,
+      Permission.location,
+      Permission.notification,
+    ].request();
+
+    statuses.forEach((permission, status) {
+      print("Permission $permission: $status");
+    });
+
+    return statuses.values.every((status) => status.isGranted);
+  }
+
 
   void _monitorBluetoothState() {
     FlutterBluePlus.adapterState.listen((state) {
@@ -55,36 +78,30 @@ class _OBD2ScreenState extends State<OBD2Screen> {
     });
   }
 
-  Future<void> _checkPermissionsAndListDevices() async {
-    if (await _requestBluetoothPermissions()) {
-      _listDevices();
-    } else {
-      print("Bluetooth permissions denied");
-    }
-  }
-
-  Future<bool> _requestBluetoothPermissions() async {
-    Map<Permission, PermissionStatus> statuses = await [
-      Permission.bluetooth,
-      Permission.bluetoothConnect,
-      Permission.bluetoothScan,
-      Permission.location,
-    ].request();
-
-    statuses.forEach((permission, status) {
-      print("Permission $permission: $status");
-    });
-
-    return statuses.values.every((status) => status.isGranted);
-  }
+  // Future<void> _checkPermissionsAndListDevices() async {
+  //   if (await _requestBluetoothPermissions()) {
+  //     _listDevices();
+  //   } else {
+  //     print("Bluetooth permissions denied");
+  //   }
+  // }
+  //
+  // Future<bool> _requestBluetoothPermissions() async {
+  //   Map<Permission, PermissionStatus> statuses = await [
+  //     Permission.bluetooth,
+  //     Permission.bluetoothConnect,
+  //     Permission.bluetoothScan,
+  //     Permission.location,
+  //   ].request();
+  //
+  //   statuses.forEach((permission, status) {
+  //     print("Permission $permission: $status");
+  //   });
+  //
+  //   return statuses.values.every((status) => status.isGranted);
+  // }
 
   Future<void> _listDevices() async {
-    // if (_bluetoothState != BluetoothAdapterState.on) {
-    //   setState(() {
-    //     _status = "Bluetooth is off. Please enable Bluetooth.";
-    //   });
-    //   return;
-    // }
 
     FlutterBluePlus.startScan(
       withServices: [],
@@ -188,8 +205,30 @@ class _OBD2ScreenState extends State<OBD2Screen> {
       final distanceInKilometers = _totalDistance / 1000;
       setState(() => _distance = "Distance: ${distanceInKilometers.toStringAsFixed(2)} km");
       // setState(() => _distance = "Distance: ${_totalDistance.toStringAsFixed(2)} m");
+      // Check if target distance is reached
+      if (distanceInKilometers >= targetDistance) {
+        NotiService().showNotification(
+          title: 'Service due!',
+          body: 'You have reached your target distance of $targetDistance km',
+        );
+      }
     }
   }
+
+  // void testNotification(){
+  //   _totalDistance += 50;
+  //
+  //   final distanceInKilometers = _totalDistance / 1000;
+  //   setState(() => _distance = "Distance: ${distanceInKilometers.toStringAsFixed(2)} km");
+  //   // setState(() => _distance = "Distance: ${_totalDistance.toStringAsFixed(2)} m");
+  //   // Check if target distance is reached
+  //   if (distanceInKilometers >= targetDistance) {
+  //     NotiService().showNotification(
+  //       title: 'Service due!',
+  //       body: 'You have reached your target distance of $targetDistance km',
+  //     );
+  //   }
+  // }
 
   void _toggleMeasurement() {
     setState(() {
@@ -198,7 +237,7 @@ class _OBD2ScreenState extends State<OBD2Screen> {
     });
 
     if (_isMeasuring) {
-      _connectToOBD(); // Automatically connect to the device when measuring starts
+      // _connectToOBD(); // Automatically connect to the device when measuring starts
       _startContinuousReading();
     }
   }
@@ -206,6 +245,7 @@ class _OBD2ScreenState extends State<OBD2Screen> {
   Future<void> _startContinuousReading() async {
     while (_isMeasuring) {
       await _sendOBDCommand("010D\r");
+      // testNotification();
       await Future.delayed(Duration(milliseconds: 500));
     }
   }
