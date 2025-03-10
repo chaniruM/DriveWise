@@ -59,7 +59,8 @@ class _QuickLookupScreenState extends State<QuickLookupScreen> {
                   style: TextStyle(fontSize: 15, color: Colors.white),
                 ),
                 SizedBox(
-                  height: 170,
+                  height: 270,
+
                   child: Center(
                     child: Lottie.asset(
                       'assets/animations/car_animation.json',
