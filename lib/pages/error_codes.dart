@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 void main() {
   runApp(DriveWiseApp());
@@ -32,12 +33,28 @@ class _TroubleCodePageState extends State<TroubleCodePage> {
     );
   }
 
+  void clearFaults() {
+    setState(() {
+      troubleCodes.clear();
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Faults cleared.")),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("DRIVEWISE"),
+        actions: [
+          IconButton(
+            icon: const Icon(LucideIcons.settings),
+            onPressed: () {}, // Placeholder for settings functionality
+          ),
+        ],
       ),
+      drawer: Drawer(), // Placeholder for menu drawer
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -68,6 +85,7 @@ class _TroubleCodePageState extends State<TroubleCodePage> {
                         ? Colors.red[300]
                         : Colors.amber[300],
                     child: ListTile(
+                      leading: const Icon(LucideIcons.alertTriangle, color: Colors.white),
                       title: Text("${trouble["code"]} - ${trouble["type"]}",
                           style: const TextStyle(fontWeight: FontWeight.bold)),
                       subtitle: Text(trouble["status"] ?? ""),
@@ -76,8 +94,27 @@ class _TroubleCodePageState extends State<TroubleCodePage> {
                 },
               ),
             ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: clearFaults,
+              child: const Text("Clear faults"),
+            ),
+            const SizedBox(height: 10),
+            Center(
+              child: Text(
+                "${troubleCodes.length} fault code(s) found",
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+            ),
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: ""),
+          BottomNavigationBarItem(icon: Icon(Icons.search), label: ""),
+          BottomNavigationBarItem(icon: Icon(Icons.article), label: ""),
+        ],
       ),
     );
   }
