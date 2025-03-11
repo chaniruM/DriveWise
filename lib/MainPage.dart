@@ -5,6 +5,7 @@ import 'pages/my_cars.dart';
 import 'pages/user_details_page.dart';
 import 'pages/read_speed.dart';
 import 'pages/home_page.dart';
+import 'pages/error_codes.dart';
 
 
 class MainPage extends StatefulWidget {
@@ -125,6 +126,14 @@ class _MainPageState extends State<MainPage> {
               title: const Text('Log Out'),
               onTap: () {
                 _onPageSelected(8);
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.error, color: Colors.red),  // 🔥 Add a menu item for Trouble Codes
+              title: const Text('error_Codes'),
+              onTap: () {
+                _onPageSelected(9);  // Navigate to Trouble Code Page
                 Navigator.pop(context);
               },
             ),
