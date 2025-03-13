@@ -47,6 +47,9 @@ flutter_icons:
   ios: true
   image_path: "assets/images/drivewise_app.png"
 
+
+
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
