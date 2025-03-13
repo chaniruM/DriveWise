@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:drivewise/pages/login_screen.dart';
 
@@ -17,7 +18,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor:Color(0xFF030B23),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Center(
@@ -27,7 +28,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset('assets/drivewise_logo.png', height: 100),
+                  Image.asset('assets/images/logo.png', height: 100),
                   SizedBox(height: 16),
                   Text(
                     "Registration",
