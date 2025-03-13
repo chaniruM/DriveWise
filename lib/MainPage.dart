@@ -5,6 +5,7 @@ import 'pages/my_cars.dart';
 import 'pages/user_details_page.dart';
 import 'pages/read_speed.dart';
 import 'pages/home_page.dart';
+import 'pages/error_codes.dart';
 
 
 class MainPage extends StatefulWidget {
@@ -19,7 +20,8 @@ class _MainPageState extends State<MainPage> {
     HomePage(),         // Home page
     MyCarsPage(),       // My Cars
     OBD2Screen(),       // OBD-2
-    UserDetailsPage(),  // Profile page
+    UserDetailsPage(),
+    TroubleCodePage(),// Profile page
   ];
 
   void _onPageSelected(int index) {
@@ -90,7 +92,7 @@ class _MainPageState extends State<MainPage> {
             ),
             ListTile(
               leading: const Icon(Icons.history, color: Colors.orange),
-              title: const Text('History'),
+              title: const Text('trouble'),
               onTap: () {
                 _onPageSelected(4);
                 Navigator.pop(context);
@@ -128,6 +130,7 @@ class _MainPageState extends State<MainPage> {
                 Navigator.pop(context);
               },
             ),
+
           ],
         ),
       ),
