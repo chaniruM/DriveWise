@@ -23,14 +23,22 @@
 // }
 
 
+import 'package:drivewise/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:drivewise/pages/login_screen.dart';
+import 'package:drivewise/pages/register_vehicle_page.dart';
+import 'package:drivewise/pages/vehicle_datails_page.dart';
+
 import 'package:drivewise/providers/theme_provider.dart';
 import 'package:drivewise/pages/settings_screen.dart';
 
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  NotiService().initNotifications();
+
+  // runApp(MyApp());
   runApp(
     MultiProvider(
       providers: [
@@ -65,11 +73,14 @@ class MyApp extends StatelessWidget {
           secondary: accentOrange,
           background: backgroundGrey,
         ),
-
-
         appBarTheme: AppBarTheme(
           backgroundColor: primaryDarkBlue,
           elevation: 0,
+        ),
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          selectedItemColor: accentOrange,
+          unselectedItemColor: Colors.grey,
+          backgroundColor: primaryDarkBlue,
         ),
         textTheme: TextTheme(
           bodyLarge: TextStyle(color: Colors.black), // Ensures readable text in light mode

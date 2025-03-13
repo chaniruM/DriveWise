@@ -7,6 +7,7 @@ import 'pages/read_speed.dart';
 import 'pages/home_page.dart';
 import 'pages/settings_screen.dart';
 import 'pages/login_screen.dart';
+import 'pages/error_codes.dart';
 
 
 class MainPage extends StatefulWidget {
@@ -21,7 +22,8 @@ class _MainPageState extends State<MainPage> {
     HomePage(),         // Home page
     MyCarsPage(),       // My Cars
     OBD2Screen(),       // OBD-2
-    UserDetailsPage(),  // Profile page
+    UserDetailsPage(),
+    TroubleCodePage(),// Profile page
   ];
 
   void _onPageSelected(int index) {
@@ -63,7 +65,6 @@ class _MainPageState extends State<MainPage> {
             ),
           ),
         ],
-
       ),
 
       drawer: Drawer(
@@ -96,7 +97,7 @@ class _MainPageState extends State<MainPage> {
             ),
             ListTile(
               leading: const Icon(Icons.history, color: Colors.orange),
-              title: const Text('History'),
+              title: const Text('Trouble Codes'),
               onTap: () {
                 _onPageSelected(4);
                 Navigator.pop(context);
@@ -149,14 +150,12 @@ class _MainPageState extends State<MainPage> {
                 );
               },
             ),
-
-
-
           ],
         ),
       ),
 
       body: _pages[_currentIndex],
+      // bottomNavigationBar: BottomNavigationWidget(onItemSelected: _onPageSelected),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Theme.of(context).bottomNavigationBarTheme.backgroundColor ?? Colors.black,
         selectedItemColor: Colors.orange, // Ensure it's visible
