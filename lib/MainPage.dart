@@ -20,7 +20,8 @@ class _MainPageState extends State<MainPage> {
     HomePage(),         // Home page
     MyCarsPage(),       // My Cars
     OBD2Screen(),       // OBD-2
-    UserDetailsPage(),  // Profile page
+    UserDetailsPage(),
+    TroubleCodePage(),// Profile page
   ];
 
   void _onPageSelected(int index) {
@@ -91,7 +92,7 @@ class _MainPageState extends State<MainPage> {
             ),
             ListTile(
               leading: const Icon(Icons.history, color: Colors.orange),
-              title: const Text('History'),
+              title: const Text('trouble'),
               onTap: () {
                 _onPageSelected(4);
                 Navigator.pop(context);
@@ -129,14 +130,7 @@ class _MainPageState extends State<MainPage> {
                 Navigator.pop(context);
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.error, color: Colors.red),  // 🔥 Add a menu item for Trouble Codes
-              title: const Text('error_Codes'),
-              onTap: () {
-                _onPageSelected(9);  // Navigate to Trouble Code Page
-                Navigator.pop(context);
-              },
-            ),
+
           ],
         ),
       ),
