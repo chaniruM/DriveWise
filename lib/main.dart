@@ -23,11 +23,18 @@
 // }
 
 
+import 'package:drivewise/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:drivewise/pages/login_screen.dart';
+import 'package:drivewise/pages/register_vehicle_page.dart';
+import 'package:drivewise/pages/vehicle_datails_page.dart';
+
 
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  NotiService().initNotifications();
+
   runApp(MyApp());
 }
 

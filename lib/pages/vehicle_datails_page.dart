@@ -98,7 +98,7 @@ class VehicleDetailsPage extends StatelessWidget {
                       backgroundColor: Colors.orange,
                       minimumSize: Size(double.infinity, 50),
                     ),
-                    child: Text('Add Service Records', style: TextStyle(color: Colors.white)),
+                    child: Text('View Products', style: TextStyle(color: Colors.white)),
                   ),
 
                   SizedBox(height: 24),

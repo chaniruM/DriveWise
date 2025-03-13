@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 import '../models/vehicle.dart';
 
 class MaintenanceOverview extends StatefulWidget {
@@ -22,18 +20,6 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
     'Brake Fluid': false,
     'Coolant': false,
   };
-
-  File? _image;
-  final ImagePicker _picker = ImagePicker();
-
-  Future<void> _openCamera() async {
-    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.camera);
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path);
-      });
-    }
-  }
 
   void _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -108,7 +94,7 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.camera_alt),
-                  onPressed: _openCamera,
+                  onPressed: () {},
                 ),
               ],
             ),
@@ -116,12 +102,10 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                ElevatedButton(onPressed: _openCamera, child: const Text('Open Camera')),
+                ElevatedButton(onPressed: () {}, child: const Text('Use OBD-II')),
+                ElevatedButton(onPressed: () {}, child: const Text('Open Camera')),
               ],
             ),
-            const SizedBox(height: 16),
-            if (_image != null)
-              Image.file(_image!, height: 200, width: double.infinity, fit: BoxFit.cover),
             const SizedBox(height: 16),
             const Text(
               'Replacements',
