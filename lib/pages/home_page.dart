@@ -23,11 +23,15 @@ class HomePage extends StatelessWidget {
               child: Container(
                 height: 100,
                 color: Colors.blue[50],
-                child: const Center(
-                  child: Text('No upcoming services at the moment.'),
+                child: Center(
+                  child: Text(
+                    'No upcoming services at the moment.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 ),
               ),
             ),
+
             const Padding(
               padding: EdgeInsets.all(16.0),
               child: Text(

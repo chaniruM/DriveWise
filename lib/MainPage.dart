@@ -157,7 +157,20 @@ class _MainPageState extends State<MainPage> {
       ),
 
       body: _pages[_currentIndex],
-      bottomNavigationBar: BottomNavigationWidget(onItemSelected: _onPageSelected),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Theme.of(context).bottomNavigationBarTheme.backgroundColor ?? Colors.black,
+        selectedItemColor: Colors.orange, // Ensure it's visible
+        unselectedItemColor: Colors.grey, // Ensure visibility
+        items: [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.directions_car), label: 'My Cars'),
+          BottomNavigationBarItem(icon: Icon(Icons.bluetooth), label: 'OBD-II'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        ],
+        currentIndex: _currentIndex,
+        onTap: _onPageSelected,
+      ),
+
     );
   }
 }

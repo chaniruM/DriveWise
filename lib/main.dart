@@ -55,14 +55,15 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'DriveWise',
       themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+
       theme: ThemeData(
         brightness: Brightness.light,
         primaryColor: primaryDarkBlue,
+        scaffoldBackgroundColor: Colors.white,
         colorScheme: ColorScheme.light(
           primary: primaryDarkBlue,
           secondary: accentOrange,
           background: backgroundGrey,
-          brightness: Brightness.light,
         ),
 
 
@@ -70,18 +71,29 @@ class MyApp extends StatelessWidget {
           backgroundColor: primaryDarkBlue,
           elevation: 0,
         ),
-
-
-        bottomNavigationBarTheme: BottomNavigationBarThemeData(
-          selectedItemColor: accentOrange,
-          unselectedItemColor: Colors.grey,
-          backgroundColor: primaryDarkBlue,
-        ),
-
         textTheme: TextTheme(
-          titleLarge: TextStyle(
-              color: themeProvider.isDarkMode ? Colors.white : primaryDarkBlue,
-              fontWeight: FontWeight.bold),
+          bodyLarge: TextStyle(color: Colors.black), // Ensures readable text in light mode
+          titleLarge: TextStyle(color: primaryDarkBlue, fontWeight: FontWeight.bold),
+        ),
+      ),
+
+
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        primaryColor: primaryDarkBlue,
+        scaffoldBackgroundColor: primaryDarkBlue,
+        colorScheme: ColorScheme.dark(
+          primary: primaryDarkBlue,
+          secondary: accentOrange,
+          background: primaryDarkBlue,
+        ),
+        appBarTheme: AppBarTheme(
+          backgroundColor: primaryDarkBlue,
+          elevation: 0,
+        ),
+        textTheme: TextTheme(
+          bodyLarge: TextStyle(color: Colors.white), // Ensures readable text in dark mode
+          titleLarge: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
       ),
       home: LoginScreen(),
