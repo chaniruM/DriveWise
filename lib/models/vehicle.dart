@@ -24,4 +24,20 @@ class Vehicle {
     required this.insuranceDateExpiry,
     required this.specifications,
   });
+
+  factory Vehicle.fromJson(Map<String, dynamic> json) {
+    return Vehicle(
+      id: json['id'],
+      nickname: json['nickname'],
+      imageUrl: json['imageUrl'],
+      registrationNumber: json['registrationNumber'],
+      make: json['make'],
+      model: json['model'],
+      year: json['year'],
+      currentMileage: json['currentMileage'],
+      licenseDateExpiry: DateTime.parse(json['licenseDateExpiry']),
+      insuranceDateExpiry: DateTime.parse(json['insuranceDateExpiry']),
+      specifications: Map<String, String>.from(json['specifications']),
+    );
+  }
 }
