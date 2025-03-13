@@ -32,7 +32,6 @@ dependencies:
     sdk: flutter
 
 
-
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
@@ -40,7 +39,7 @@ dependencies:
   permission_handler: ^11.3.1
   lottie: ^3.2.0
 #  google_fonts: ^6.1.0  # Use the latest version
-  image_picker: ^1.0.7
+#  image_picker: ^1.0.7
   flutter_launcher_icons: ^0.14.3
   lucide_icons: ^0.257.0
   flutter_local_notifications: ^18.0.1
@@ -53,12 +52,13 @@ flutter_icons:
 
 
 
+  shared_preferences: ^2.5.2
+  provider: ^6.0.5
+
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -82,8 +82,23 @@ flutter:
     - assets/images/logo3d.png
     - assets/animations/car_animation.json
     - assets/images/car.png
-    - assets/images/splash_background.jpg
     - assets/images/google_logo.png
+    - assets/images/engine_oil.jpg.png
+    - assets/images/toyota.png
+    - assets/images/valvoline.png
+    - assets/images/lukoil.png
+    - assets/images/mobil.png
+    - assets/images/caltex.png
+    - assets/images/transmission_oil.png
+    - assets/images/oil_filters.jpg
+    - assets/images/tyres.jpg
+    - assets/images/break_fluid.png
+    - assets/images/splash_background.jpg
+    - assets/images/toyota_motor_oil.png
+    - assets/images/Toyota_WS_AT_Fluid.png
+    - assets/images/oil_filter_90915-10003.png
+
+
 
 
 

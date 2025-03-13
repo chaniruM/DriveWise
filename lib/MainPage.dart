@@ -5,6 +5,8 @@ import 'pages/my_cars.dart';
 import 'pages/user_details_page.dart';
 import 'pages/read_speed.dart';
 import 'pages/home_page.dart';
+import 'pages/settings_screen.dart';
+import 'pages/login_screen.dart';
 import 'pages/error_codes.dart';
 
 
@@ -53,11 +55,14 @@ class _MainPageState extends State<MainPage> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () {
-              // Navigate to settings page (implement this)
+          GestureDetector(
+            onTap: () {
+
             },
+            child: CircleAvatar(
+              backgroundColor: Colors.orange,
+              child: Icon(Icons.person, color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -92,7 +97,7 @@ class _MainPageState extends State<MainPage> {
             ),
             ListTile(
               leading: const Icon(Icons.history, color: Colors.orange),
-              title: const Text('trouble'),
+              title: const Text('Trouble Codes'),
               onTap: () {
                 _onPageSelected(4);
                 Navigator.pop(context);
@@ -122,21 +127,49 @@ class _MainPageState extends State<MainPage> {
                 Navigator.pop(context);
               },
             ),
+
+            ListTile(
+              leading: const Icon(Icons.settings, color: Colors.orange),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SettingsScreen()),
+                );
+              },
+            ),
+
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.orange),
               title: const Text('Log Out'),
               onTap: () {
-                _onPageSelected(8);
-                Navigator.pop(context);
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                      (route) => false, // Removes all previous routes from the stack
+                );
               },
             ),
-
           ],
         ),
       ),
 
       body: _pages[_currentIndex],
-      bottomNavigationBar: BottomNavigationWidget(onItemSelected: _onPageSelected),
+      // bottomNavigationBar: BottomNavigationWidget(onItemSelected: _onPageSelected),
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Theme.of(context).bottomNavigationBarTheme.backgroundColor ?? Colors.black,
+        selectedItemColor: Colors.orange, // Ensure it's visible
+        unselectedItemColor: Colors.grey, // Ensure visibility
+        items: [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.directions_car), label: 'My Cars'),
+          BottomNavigationBarItem(icon: Icon(Icons.bluetooth), label: 'OBD-II'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        ],
+        currentIndex: _currentIndex,
+        onTap: _onPageSelected,
+      ),
+
     );
   }
 }
