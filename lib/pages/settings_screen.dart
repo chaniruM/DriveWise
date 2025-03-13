@@ -39,15 +39,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Settings"),
-        backgroundColor: const Color(0xFFE95B15),
+
       ),
-      body: Container(
+      body: Padding(
         padding: const EdgeInsets.all(16.0),
-        color: isDarkMode ? const Color(0xFF030B23) : Colors.white,
         child: Column(
           children: [
             _buildSwitchTile(
-              title: "Dark Mode",
+              title: "Dark Theme",
               value: isDarkMode,
               onChanged: (bool value) {
                 themeProvider.toggleTheme(); // Toggle dark mode globally
@@ -76,16 +75,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required Function(bool) onChanged,
     Color activeColor = Colors.orange,
   }) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    bool isDarkMode = themeProvider.isDarkMode;
+
+    final theme = Theme.of(context);
 
     return Card(
-      color: isDarkMode ? const Color(0xFF030B23) : Colors.white,
+      color: theme.cardColor,
       elevation: 4,
       child: ListTile(
         title: Text(
           title,
-          style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
+          style: theme.textTheme.bodyLarge,
         ),
         trailing: Switch(
           value: value,
