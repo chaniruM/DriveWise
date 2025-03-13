@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:drivewise/MainPage.dart';
 import 'package:drivewise/pages/quick_lookup_screen.dart';
+
+import 'package:drivewise/pages/Registration_Page.dart';
+
 import 'package:drivewise/services/api_service.dart';
+
 
 
 void main() {
@@ -162,10 +166,24 @@ class _LoginScreenState extends State<LoginScreen> {
                       'assets/images/google_logo.png',
                       height: 32,
                     ),
+
+                    SizedBox(height: 10),
+                    TextButton(onPressed: (){
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => RegistrationScreen()),
+                      );
+                    },
+                        child: Text(
+                          "Don't have an account? Register",
+                          style: TextStyle(color: Colors.white70),
+                        ),
+
                     onPressed: () {},
                     label: Text(
                       'Google',
                       style: TextStyle(color: Colors.black, fontSize: 18),
+
                     ),
                   ),
                   SizedBox(height: 10),
