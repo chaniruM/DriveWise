@@ -1,69 +1,902 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
 
-class HomePage extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'dart:async';
+import 'package:intl/intl.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:http/http.dart' as http;
+
+import '../services/notification_service.dart';
+
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final FlutterBluePlus flutterBlue = FlutterBluePlus();
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  double targetDistance = 1.0;
+  BluetoothDevice? _selectedDevice;
+  BluetoothCharacteristic? _writeCharacteristic;
+  BluetoothCharacteristic? _readCharacteristic;
+  String _distance = "Distance: 0.00 km";
+  bool _isMeasuring = false;
+  List<Map<String, dynamic>> _speedData = [];
+  double _totalDistance = 0.0;
+  BluetoothAdapterState _bluetoothState = BluetoothAdapterState.unknown;
+  String _status = "Press Start to read distance";
+
+  int _currentSlideIndex = 0;
+  final PageController _pageController = PageController();
+  String _selectedVehicle = 'Jimny';
+  bool _isTracking = false;
+  int _mileage = 91366; // Starting mileage shown in the image
+  // Timer? _mileageTimer;
+  List<Map<String, dynamic>> _vehicles = [];
+  List<Map<String, dynamic>> _upcomingEvents = [];
+  List<Map<String, dynamic>> _recentSearches = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _requestPermissions();
+    _monitorBluetoothState();
+    _listDevices();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    try {
+      // Mock data for demonstration, replace with actual DB connection
+      await _loadVehicles();
+      await _loadUpcomingEvents();
+      await _loadRecentSearches();
+    } catch (e) {
+      debugPrint('Error loading data: $e');
+    }
+  }
+
+  Future<bool> _requestPermissions() async {
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.bluetooth,
+      Permission.bluetoothConnect,
+      Permission.bluetoothScan,
+      Permission.location,
+      Permission.notification,
+    ].request();
+
+    statuses.forEach((permission, status) {
+      print("Permission $permission: $status");
+    });
+
+    return statuses.values.every((status) => status.isGranted);
+  }
+
+
+  void _monitorBluetoothState() {
+    FlutterBluePlus.adapterState.listen((state) {
+      setState(() {
+        _bluetoothState = state;
+      });
+      if (state == BluetoothAdapterState.on) {
+        _listDevices(); // Start scanning when Bluetooth is enabled
+      } else {
+        print("Bluetooth is off");
+        setState(() {
+          _status = "Bluetooth is off. Please enable Bluetooth.";
+        });
+      }
+    });
+  }
+
+  Future<void> _listDevices() async {
+
+    FlutterBluePlus.startScan(
+      withServices: [],
+      withNames: [],
+      withKeywords: [],
+      timeout: Duration(seconds: 10),
+    );
+
+    FlutterBluePlus.scanResults.listen((results) {
+      for (ScanResult result in results) {
+        if (result.device.name == "OBDII") {
+          setState(() {
+            _selectedDevice = result.device;
+          });
+          FlutterBluePlus.stopScan();
+          break;
+        }
+      }
+    });
+
+    await Future.delayed(Duration(seconds: 5));
+    FlutterBluePlus.stopScan();
+  }
+
+  Future<void> _connectToOBD() async {
+    if (_selectedDevice == null) {
+      setState(() => _status = "No device selected");
+      return;
+    }
+
+    try {
+      await _selectedDevice!.connect(autoConnect: false);
+      List<BluetoothService> services = await _selectedDevice!.discoverServices();
+
+      for (var service in services) {
+        for (var characteristic in service.characteristics) {
+          if (characteristic.properties.write) {
+            _writeCharacteristic = characteristic;
+          }
+          if (characteristic.properties.notify || characteristic.properties.read) {
+            _readCharacteristic = characteristic;
+            await _readCharacteristic!.setNotifyValue(true);
+            _readCharacteristic!.value.listen(_onDataReceived);
+          }
+        }
+      }
+
+      setState(() => _status = "Connected to ${_selectedDevice!.name}");
+    } catch (e) {
+      setState(() => _status = "Connection failed: $e");
+    }
+  }
+
+  void _onDataReceived(List<int> data) {
+    final response = utf8.decode(data).trim();
+    final speedMatch = RegExp(r"41 0D ([0-9A-F]{2})").firstMatch(response);
+    // final dtcMatch = RegExp(r"43 ([0-9A-F ]+)").firstMatch(response);
+
+    if (speedMatch != null) {
+      final speedValue = int.parse(speedMatch.group(1)!, radix: 16);
+      final currentTime = DateTime.now().millisecondsSinceEpoch / 1000;
+
+      setState(() {
+        _speedData.add({"time": currentTime, "speed": speedValue});
+      });
+
+      _calculateDistance();
+    // } else if (dtcMatch != null) {
+    //   final dtcResponse = dtcMatch.group(1)!;
+    //   if (dtcResponse.trim().isEmpty || dtcResponse == "00" || dtcResponse == "NO DATA") {
+    //     setState(() {
+    //       // _dtcCodes = ["No error codes found"];
+    //     });
+    //   } else {
+    //     // _parseDTCs(dtcResponse);
+    //   }
+    // }
+    }
+  }
+
+  Future<void> _sendOBDCommand(String command) async {
+    if (_writeCharacteristic == null) return;
+    await _writeCharacteristic!.write(utf8.encode(command), withoutResponse: false);
+    await Future.delayed(Duration(milliseconds: 200));
+  }
+
+  void _calculateDistance() {
+    if (_speedData.length < 2) return;
+
+    final last = _speedData.length - 1;
+    final v1 = _speedData[last - 1]["speed"] / 3.6;
+    final v2 = _speedData[last]["speed"] / 3.6;
+    final t1 = _speedData[last - 1]["time"];
+    final t2 = _speedData[last]["time"];
+    final timeDiff = t2 - t1;
+
+    if (timeDiff > 0) {
+      final distanceSegment = ((v1 + v2) / 2) * timeDiff;
+      _totalDistance += distanceSegment;
+
+      final distanceInKilometers = _totalDistance / 1000;
+      setState(() => _distance = "Distance: ${distanceInKilometers.toStringAsFixed(2)} km");
+      // setState(() => _distance = "Distance: ${_totalDistance.toStringAsFixed(2)} m");
+      // Check if target distance is reached
+      if (distanceInKilometers >= targetDistance) {
+        NotiService().showNotification(
+          title: 'Service due!',
+          body: 'You have reached your target distance of $targetDistance km',
+        );
+      }
+    }
+  }
+
+  Future<void> _startContinuousReading() async {
+    while (_isMeasuring) {
+      await _sendOBDCommand("010D\r");
+      // testNotification();
+      await Future.delayed(Duration(milliseconds: 500));
+    }
+  }
+
+  Future<void> _loadVehicles() async {
+    const userId = '67cea5d3ef36ebb22c2d7bdb';
+    final response = await http.get(Uri.parse('http://192.168.1.110:5001/api/vehicles/$userId'));
+    if (response.statusCode == 200) {
+      // final List<dynamic> data = jsonDecode(response.body);
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      final List<dynamic> vehicles = data['vehicles'];
+
+      // Debug: Print the fetched data
+      debugPrint('Fetched vehicles: $vehicles');
+
+      setState(() {
+        _vehicles = vehicles.map((vehicle) => {
+          'name': vehicle['nickname'],
+          // 'name': '${vehicle['make']} ${vehicle['model']}',
+          'year': vehicle['year'],
+          'mileage': vehicle['currentMileage'],
+        }).toList();
+        if (_vehicles.isNotEmpty) {
+          _selectedVehicle = _vehicles[0]['name'];
+          _mileage = _vehicles[0]['mileage'];
+        }
+      });
+
+      // Debug: Print the parsed _vehicles
+      debugPrint('Parsed _vehicles: $_vehicles');
+
+    } else {
+      throw Exception('Failed to load vehicles');
+    }
+
+    // Mock data for demonstration
+    // setState(() {
+    //   _vehicles = [
+    //     {'name': 'Jimny', 'year': '2019', 'mileage': 91366},
+    //     {'name': 'Montero', 'year': '2015', 'mileage': 120450},
+    //     {'name': 'Wagon R', 'year': '2018', 'mileage': 85720},
+    //   ];
+    // });
+  }
+
+  Future<void> _loadUpcomingEvents() async {
+
+    const userId = '67cea5d3ef36ebb22c2d7bdb';
+    try {
+      final response = await http.get(Uri.parse('http://192.168.1.110:5001/api/vehicles/$userId'));
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        final List<dynamic> upcomingEvents = data['upcomingEvents'];
+
+        setState(() {
+          _upcomingEvents = upcomingEvents.map((event) => {
+            'date': event['date'] != null ? DateTime.parse(event['date']) : null,
+            'event': event['type'],
+            'vehicle': event['vehicle'],
+            'mileageDifference': event['mileageDifference'],
+          }).toList();
+        });
+
+        // Debug: Print the parsed _upcomingEvents
+        debugPrint('Parsed _upcomingEvents: $_upcomingEvents');
+
+      } else {
+        throw Exception('Failed to load upcoming events');
+      }
+    } catch (e) {
+      debugPrint('Error loading upcoming events: $e');
+    }
+    // mock data
+    // setState(() {
+    //   _upcomingEvents = [
+    //     {
+    //       'date': DateTime(2025, 12, 23),
+    //       'event': 'Engine Oil Replacement',
+    //       'vehicle': 'Montero 2015'
+    //     },
+    //     {
+    //       'date': DateTime(2025, 12, 29),
+    //       'event': 'Revenue License Expiry',
+    //       'vehicle': 'Jimny 2019'
+    //     },
+    //     {
+    //       'date': DateTime(2026, 2, 23),
+    //       'event': 'Insurance Expiry',
+    //       'vehicle': 'Wagon R 2018'
+    //     },
+    //   ];
+    // });
+  }
+
+  Future<void> _loadRecentSearches() async {
+    // mock data
+    setState(() {
+      _recentSearches = [
+        {'name': 'Engine Oil 5W-30', 'imageUrl': 'assets/engine_oil.png'},
+        {'name': 'Air Filter', 'imageUrl': 'assets/air_filter.png'},
+      ];
+    });
+  }
+
+  void _startTracking() {
+    if (!_isTracking) {
+      setState(() {
+        _isTracking = true;
+      });
+      _connectToOBD(); // Automatically connect to the device when measuring starts
+      _startContinuousReading();
+
+      // _mileageTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      //   setState(() {
+      //     _mileage += 1; // Increment mileage as the user drives
+      //   });
+      // });
+    }
+  }
+
+  Future<void> _stopTracking() async {
+    if (_isTracking) {
+      // _mileageTimer?.cancel();
+
+      setState(() {
+        _isTracking = false;
+      });
+
+      final response = await http.put(
+        Uri.parse('http://192.168.1.110:5001/api/vehicles/updateMileage'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, dynamic>{
+          'vehicleId': _vehicles.firstWhere((vehicle) => vehicle['name'] == _selectedVehicle)['id'],
+          'mileage': _mileage + _totalDistance,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to update mileage');
+      }
+
+    }
+  }
+
+  void _onVehicleChanged(String? newValue) {
+    if (newValue != null) {
+      setState(() {
+        _selectedVehicle = newValue;
+        _mileage = _vehicles.firstWhere((vehicle) => vehicle['name'] == newValue)['mileage'];
+
+        // final selectedVehicleData = _vehicles.firstWhere(
+        //       (vehicle) => vehicle['name'] == newValue,
+        //   orElse: () => {'mileage': 0},
+        // );
+        //
+        // _mileage = selectedVehicleData['mileage'] as int;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    // _mileageTimer?.cancel();
+    _pageController.dispose();
+    _selectedDevice?.disconnect();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Convert mileage to display format (91366 -> 9 1 3 6 6)
+    String mileageStr = _mileage.toString().padLeft(5, '0');
+    List<String> mileageDigits = mileageStr.split('');
+
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text(
-                'Upcoming Services',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Container(
-                height: 100,
-                color: Colors.blue[50],
-                child: const Center(
-                  child: Text('No upcoming services at the moment.'),
-                ),
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text(
-                'Recent Searches',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Container(
-                height: 100,
-                color: Colors.green[50],
-                child: const Center(
-                  child: Text('Your recent searches will appear here.'),
-                ),
-              ),
-            ),
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text(
-                'Promotional Materials',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Container(
-                height: 100,
-                color: Colors.red[50],
-                child: const Center(
-                  child: Text('Check out our latest promotions here!'),
-                ),
-              ),
-            ),
+            // Promotional Gallery
+            _buildPromotionalGallery(),
+
+            // Mileage Display and Tracking
+            _buildMileageTracker(mileageDigits),
+
+            // Vehicle Selector
+            _buildVehicleSelector(),
+
+            // Upcoming Events
+            _buildUpcomingEvents(),
+
+            // Recently Searched
+            _buildRecentlySearched(),
+
+            const SizedBox(height: 80), // Space for bottom nav bar
           ],
         ),
       ),
     );
   }
+
+  Widget _buildPromotionalGallery() {
+    List<Widget> promotionalSlides = [
+      _buildPromotionalSlide(
+        'A FAMILY OWNED BUSINESS\nWITH A LARGE, CLEAN WORKSHOP',
+        '30 YEARS OF\nEXPERIENCE',
+        'WITH ALL WORK BACKED BY A PARTS\nAND LABOUR GUARANTEE.',
+        'assets/workshop_image.jpg',
+      ),
+      _buildPromotionalSlide(
+        'EXPERT TECHNICIANS',
+        'CERTIFIED\nSERVICE',
+        'GUARANTEED QUALITY REPAIRS\nAND MAINTENANCE.',
+        'assets/technician_image.jpg',
+      ),
+      _buildPromotionalSlide(
+        'GENUINE PARTS ONLY',
+        'QUALITY\nASSURED',
+        'WE NEVER COMPROMISE ON\nTHE PARTS WE USE.',
+        'assets/parts_image.jpg',
+      ),
+    ];
+
+    return Container(
+      color: const Color(0xFF0A1128),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 300,
+            child: PageView(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentSlideIndex = index;
+                });
+              },
+              children: promotionalSlides,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              promotionalSlides.length,
+                  (index) => Container(
+                width: 8,
+                height: 8,
+                margin: const EdgeInsets.symmetric(horizontal: 4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _currentSlideIndex == index
+                      ? Colors.white
+                      : Colors.grey,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPromotionalSlide(String topText, String middleText, String bottomText, String imagePath) {
+    return Stack(
+      children: [
+        Container(
+          width: double.infinity,
+          height: 300,
+          color: const Color(0xFF1A2238), // Darkened placeholder for image
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: Container(
+              width: 250,
+              height: 250,
+              color: const Color(0xFF2A324B), // Placeholder for car image
+              child: const Center(
+                child: Icon(Icons.car_repair, size: 100, color: Colors.white54),
+              ),
+            ),
+          ),
+        ),
+
+        Positioned(
+          left: 20,
+          top: 40,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                topText,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.white),
+                ),
+                child: Text(
+                  middleText,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                bottomText,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMileageTracker(List<String> mileageDigits) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      child: Column(
+        children: [
+          // Mileage Display
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ...mileageDigits.map((digit) => _buildMileageDigit(digit)).toList(),
+              const SizedBox(width: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: const Text(
+                  'km',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // Start/Stop Buttons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(
+                onPressed: _startTracking,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green[300],
+                  foregroundColor: Colors.black,
+                  minimumSize: const Size(120, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                ),
+                child: const Text('Start', style: TextStyle(fontSize: 18)),
+              ),
+              ElevatedButton(
+                onPressed: _stopTracking,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red[400],
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(120, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                ),
+                child: const Text('Stop', style: TextStyle(fontSize: 18)),
+              ),
+            ],
+          ),
+
+          Text(_distance, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMileageDigit(String digit) {
+    return Container(
+      width: 40,
+      height: 60,
+      margin: const EdgeInsets.symmetric(horizontal: 3),
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(5),
+      ),
+      child: Center(
+        child: Text(
+          digit,
+          style: const TextStyle(
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVehicleSelector() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 60, vertical: 10),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: Colors.grey[300],
+          borderRadius: BorderRadius.circular(5),
+        ),
+        child: DropdownButton<String>(
+          value: _selectedVehicle,
+          icon: const Icon(Icons.arrow_drop_down),
+          isExpanded: true,
+          underline: Container(),
+          onChanged: _onVehicleChanged,
+          items: _vehicles.map<DropdownMenuItem<String>>((vehicle) {
+            return DropdownMenuItem<String>(
+              value: vehicle['name'],
+              child: Text(vehicle['name']),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUpcomingEvents() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(bottom: 10),
+            child: Text(
+              'Upcoming events',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepOrange,
+              ),
+            ),
+          ),
+          ...(_upcomingEvents.map((event) => _buildEventCard(event)).toList()),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEventCard(Map<String, dynamic> event) {
+    final DateTime? eventDate = event['date'];
+    // final String month = DateFormat('MMM').format(eventDate);
+    // final String day = eventDate.day.toString();
+    final String month = eventDate != null ? DateFormat('MMM').format(eventDate) : '';
+    final String day = eventDate != null ? eventDate.day.toString() : '';
+    final int? mileageDifference = event['mileageDifference'];
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0A1128),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 85,
+            height: 85,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8),
+                bottomLeft: Radius.circular(8),
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (eventDate != null) Text(
+                  month,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (eventDate != null) Text(
+                  day,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (mileageDifference != null) Text(
+                  '$mileageDifference km',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    event['event'],
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    event['vehicle'],
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentlySearched() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(bottom: 10),
+            child: Text(
+              'Recently searched',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.deepOrange,
+              ),
+            ),
+          ),
+          // If we have recent searches, display them in a row
+          if (_recentSearches.isNotEmpty)
+            SizedBox(
+              height: 100,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: _recentSearches.length,
+                itemBuilder: (context, index) {
+                  return Container(
+                    width: 100,
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Placeholder for image
+                        Container(
+                          height: 50,
+                          width: 50,
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.search),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _recentSearches[index]['name'],
+                          textAlign: TextAlign.center,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            )
+          else
+            Container(
+              height: 100,
+              alignment: Alignment.center,
+              child: const Text('No recent searches yet'),
+            ),
+        ],
+      ),
+    );
+  }
 }
+
+
+// import 'package:flutter/material.dart';
+//
+// class HomePage extends StatelessWidget {
+//   const HomePage({super.key});
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       body: SingleChildScrollView(
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             const Padding(
+//               padding: EdgeInsets.all(16.0),
+//               child: Text(
+//                 'Upcoming Services',
+//                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+//               ),
+//             ),
+//             Padding(
+//               padding: const EdgeInsets.symmetric(horizontal: 16.0),
+//               child: Container(
+//                 height: 100,
+//                 color: Colors.blue[50],
+//                 child: const Center(
+//                   child: Text('No upcoming services at the moment.'),
+//                 ),
+//               ),
+//             ),
+//             const Padding(
+//               padding: EdgeInsets.all(16.0),
+//               child: Text(
+//                 'Recent Searches',
+//                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+//               ),
+//             ),
+//             Padding(
+//               padding: const EdgeInsets.symmetric(horizontal: 16.0),
+//               child: Container(
+//                 height: 100,
+//                 color: Colors.green[50],
+//                 child: const Center(
+//                   child: Text('Your recent searches will appear here.'),
+//                 ),
+//               ),
+//             ),
+//             const Padding(
+//               padding: EdgeInsets.all(16.0),
+//               child: Text(
+//                 'Promotional Materials',
+//                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+//               ),
+//             ),
+//             Padding(
+//               padding: const EdgeInsets.symmetric(horizontal: 16.0),
+//               child: Container(
+//                 height: 100,
+//                 color: Colors.red[50],
+//                 child: const Center(
+//                   child: Text('Check out our latest promotions here!'),
+//                 ),
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
