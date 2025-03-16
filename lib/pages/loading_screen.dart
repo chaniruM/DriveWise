@@ -1,63 +1,45 @@
 import 'package:flutter/material.dart';
-import 'splash_screen.dart';
+import 'dart:async';
+import 'package:drivewise/pages/welcome_screen.dart';
 
-
-void main() {
-  runApp(const DriveWiseApp());
+class LoadingScreen extends StatefulWidget {
+  @override
+  _LoadingScreenState createState() => _LoadingScreenState();
 }
 
-class DriveWiseApp extends StatelessWidget {
-  const DriveWiseApp({Key? key}) : super(key: key);
-
+class _LoadingScreenState extends State<LoadingScreen> {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: const LoadingScreen(),
-    );
+  void initState() {
+    super.initState();
+    // Delay for 3 seconds then navigate to MainPage
+    Timer(Duration(seconds: 3), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => WelcomeScreen()),
+      );
+    });
   }
-}
-
-class LoadingScreen extends StatelessWidget {
-  const LoadingScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onVerticalDragEnd: (details) {
-        if (details.primaryVelocity! < 0) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const SplashScreen()),
-          );
-        }
-      },
-      child: Scaffold(
-        backgroundColor: const Color(0xFF030B23),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                'assets/images/logo.png',
-                width: 250,
-              ),
-              const SizedBox(height: 50),
-              const Icon(
-                Icons.arrow_upward,
-                size: 70,
-                color: Colors.white,
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Swipe up to continue',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                ),
-              ),
-            ],
-          ),
+    return Scaffold(
+      backgroundColor: Color(0xFF030B23),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/images/logo.png', // Ensure this image exists
+              width: 250,
+            ),
+            SizedBox(height: 50),
+            CircularProgressIndicator(color: Colors.white), // Show loading animation
+            SizedBox(height: 20),
+            Text(
+              'Loading, please wait...',
+              style: TextStyle(color: Colors.white, fontSize: 16),
+            ),
+          ],
         ),
       ),
     );

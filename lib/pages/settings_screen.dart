@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:drivewise/providers/theme_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:drivewise/providers/theme_provider.dart';
 
 
 class SettingsScreen extends StatefulWidget {
