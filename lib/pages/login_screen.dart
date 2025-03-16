@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:drivewise/MainPage.dart';
 import 'package:drivewise/pages/quick_lookup_screen.dart';
-
 import 'package:drivewise/pages/Registration_Page.dart';
-
 import 'package:drivewise/services/api_service.dart';
-
-
+import 'package:flutter/gestures.dart';
 
 void main() {
   runApp(DriveWiseApp());
@@ -32,7 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  bool _isPasswordVisible = false; // Added password visibility state
+  bool _isPasswordVisible = false;
 
   void loginUser() async {
     if (_formKey.currentState!.validate()) {
@@ -45,10 +42,12 @@ class _LoginScreenState extends State<LoginScreen> {
           MaterialPageRoute(builder: (context) => MainPage()),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Invalid login credentials"),
-          backgroundColor: Colors.red,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Invalid login credentials"),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -103,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(height: 10),
                   TextFormField(
                     controller: _passwordController,
-                    obscureText: !_isPasswordVisible, // Password toggle
+                    obscureText: !_isPasswordVisible,
                     decoration: InputDecoration(
                       hintText: 'Password',
                       hintStyle: TextStyle(color: Colors.grey),
@@ -115,7 +114,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                          _isPasswordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
                           color: Colors.white70,
                         ),
                         onPressed: () {
@@ -132,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       }
                       return null;
                     },
-                  ), // Added missing comma
+                  ),
                   SizedBox(height: 20),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
@@ -166,32 +167,41 @@ class _LoginScreenState extends State<LoginScreen> {
                       'assets/images/google_logo.png',
                       height: 32,
                     ),
-
-                    SizedBox(height: 10),
-                    TextButton(onPressed: (){
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => RegistrationScreen()),
-                      );
-                    },
-                        child: Text(
-                          "Don't have an account? Register",
-                          style: TextStyle(color: Colors.white70),
-                        ),
-
-                    onPressed: () {},
                     label: Text(
                       'Google',
                       style: TextStyle(color: Colors.black, fontSize: 18),
-
                     ),
+                    onPressed: () {
+                      // Handle Google login
+                    },
                   ),
                   SizedBox(height: 10),
                   TextButton(
-                    onPressed: () {},
-                    child: Text(
-                      "Don't have an account? Register",
-                      style: TextStyle(color: Colors.white70),
+                    onPressed: null, // Disable the default button tap
+                    child: Text.rich(
+                      TextSpan(
+                        text: "Don't have an account? ",
+                        style: TextStyle(color: Colors.white70),
+                        // Default text color
+                        children: [
+                          TextSpan(
+                            text: "Register",
+                            style: TextStyle(
+                              color: Colors.lightBlueAccent,
+                              fontWeight: FontWeight.bold,
+                            ), // Different color for "Register"
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          RegistrationScreen()),
+                                );
+                              },
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   SizedBox(height: 20),
