@@ -35,9 +35,7 @@ class _HomePageState extends State<HomePage> {
   int _currentSlideIndex = 0;
   final PageController _pageController = PageController();
   String _selectedVehicle = 'Jimny';
-  // bool _isTracking = false;
   double _mileage = 91366; // Starting mileage shown in the image
-  // Timer? _mileageTimer;
   List<Map<String, dynamic>> _vehicles = [];
   List<Map<String, dynamic>> _upcomingEvents = [];
   List<Map<String, dynamic>> _recentSearches = [];
@@ -47,7 +45,6 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _requestPermissions();
     _monitorBluetoothState();
-    // _listDevices();
     _loadData();
   }
 
@@ -170,16 +167,6 @@ class _HomePageState extends State<HomePage> {
       });
 
       _calculateDistance();
-    // } else if (dtcMatch != null) {
-    //   final dtcResponse = dtcMatch.group(1)!;
-    //   if (dtcResponse.trim().isEmpty || dtcResponse == "00" || dtcResponse == "NO DATA") {
-    //     setState(() {
-    //       // _dtcCodes = ["No error codes found"];
-    //     });
-    //   } else {
-    //     // _parseDTCs(dtcResponse);
-    //   }
-    // }
     }
   }
 
@@ -258,15 +245,6 @@ class _HomePageState extends State<HomePage> {
     } else {
       throw Exception('Failed to load vehicles');
     }
-
-    // Mock data for demonstration
-    // setState(() {
-    //   _vehicles = [
-    //     {'name': 'Jimny', 'year': '2019', 'mileage': 91366},
-    //     {'name': 'Montero', 'year': '2015', 'mileage': 120450},
-    //     {'name': 'Wagon R', 'year': '2018', 'mileage': 85720},
-    //   ];
-    // });
   }
 
   Future<void> _loadUpcomingEvents() async {
@@ -296,26 +274,6 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       debugPrint('Error loading upcoming events: $e');
     }
-    // mock data
-    // setState(() {
-    //   _upcomingEvents = [
-    //     {
-    //       'date': DateTime(2025, 12, 23),
-    //       'event': 'Engine Oil Replacement',
-    //       'vehicle': 'Montero 2015'
-    //     },
-    //     {
-    //       'date': DateTime(2025, 12, 29),
-    //       'event': 'Revenue License Expiry',
-    //       'vehicle': 'Jimny 2019'
-    //     },
-    //     {
-    //       'date': DateTime(2026, 2, 23),
-    //       'event': 'Insurance Expiry',
-    //       'vehicle': 'Wagon R 2018'
-    //     },
-    //   ];
-    // });
   }
 
   Future<void> _loadRecentSearches() async {
@@ -335,12 +293,6 @@ class _HomePageState extends State<HomePage> {
       });
       _connectToOBD(); // Automatically connect to the device when measuring starts
       _startContinuousReading();
-
-      // _mileageTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      //   setState(() {
-      //     _mileage += 1; // Increment mileage as the user drives
-      //   });
-      // });
     }
   }
 
@@ -386,13 +338,6 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _selectedVehicle = newValue;
         _mileage = _vehicles.firstWhere((vehicle) => vehicle['name'] == newValue)['mileage'];
-
-        // final selectedVehicleData = _vehicles.firstWhere(
-        //       (vehicle) => vehicle['name'] == newValue,
-        //   orElse: () => {'mileage': 0},
-        // );
-        //
-        // _mileage = selectedVehicleData['mileage'] as int;
       });
     }
   }
@@ -866,74 +811,3 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-
-
-// import 'package:flutter/material.dart';
-//
-// class HomePage extends StatelessWidget {
-//   const HomePage({super.key});
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       body: SingleChildScrollView(
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             const Padding(
-//               padding: EdgeInsets.all(16.0),
-//               child: Text(
-//                 'Upcoming Services',
-//                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-//               ),
-//             ),
-//             Padding(
-//               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-//               child: Container(
-//                 height: 100,
-//                 color: Colors.blue[50],
-//                 child: const Center(
-//                   child: Text('No upcoming services at the moment.'),
-//                 ),
-//               ),
-//             ),
-//             const Padding(
-//               padding: EdgeInsets.all(16.0),
-//               child: Text(
-//                 'Recent Searches',
-//                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-//               ),
-//             ),
-//             Padding(
-//               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-//               child: Container(
-//                 height: 100,
-//                 color: Colors.green[50],
-//                 child: const Center(
-//                   child: Text('Your recent searches will appear here.'),
-//                 ),
-//               ),
-//             ),
-//             const Padding(
-//               padding: EdgeInsets.all(16.0),
-//               child: Text(
-//                 'Promotional Materials',
-//                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-//               ),
-//             ),
-//             Padding(
-//               padding: const EdgeInsets.symmetric(horizontal: 16.0),
-//               child: Container(
-//                 height: 100,
-//                 color: Colors.red[50],
-//                 child: const Center(
-//                   child: Text('Check out our latest promotions here!'),
-//                 ),
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
