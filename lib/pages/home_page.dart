@@ -28,14 +28,15 @@ class _HomePageState extends State<HomePage> {
   bool _isMeasuring = false;
   List<Map<String, dynamic>> _speedData = [];
   double _totalDistance = 0.0;
+  double _distanceInKM = 0.0;
   BluetoothAdapterState _bluetoothState = BluetoothAdapterState.unknown;
   String _status = "Press Start to read distance";
 
   int _currentSlideIndex = 0;
   final PageController _pageController = PageController();
   String _selectedVehicle = 'Jimny';
-  bool _isTracking = false;
-  int _mileage = 91366; // Starting mileage shown in the image
+  // bool _isTracking = false;
+  double _mileage = 91366; // Starting mileage shown in the image
   // Timer? _mileageTimer;
   List<Map<String, dynamic>> _vehicles = [];
   List<Map<String, dynamic>> _upcomingEvents = [];
@@ -46,7 +47,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _requestPermissions();
     _monitorBluetoothState();
-    _listDevices();
+    // _listDevices();
     _loadData();
   }
 
@@ -96,6 +97,13 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _listDevices() async {
 
+    if (_bluetoothState != BluetoothAdapterState.on) {
+      setState(() {
+        _status = "Bluetooth is off. Please enable Bluetooth.";
+      });
+      return;
+    }
+
     FlutterBluePlus.startScan(
       withServices: [],
       withNames: [],
@@ -115,7 +123,7 @@ class _HomePageState extends State<HomePage> {
       }
     });
 
-    await Future.delayed(Duration(seconds: 5));
+    await Future.delayed(Duration(seconds: 10));
     FlutterBluePlus.stopScan();
   }
 
@@ -195,11 +203,14 @@ class _HomePageState extends State<HomePage> {
       final distanceSegment = ((v1 + v2) / 2) * timeDiff;
       _totalDistance += distanceSegment;
 
-      final distanceInKilometers = _totalDistance / 1000;
-      setState(() => _distance = "Distance: ${distanceInKilometers.toStringAsFixed(2)} km");
+      // final distanceInKilometers = _totalDistance / 1000;
+      _distanceInKM = _totalDistance / 1000;
+      // setState(() => _distance = "Distance: ${distanceInKilometers.toStringAsFixed(2)} km");
+      setState(() => _distance = "Distance: ${_distanceInKM.toStringAsFixed(2)} km");
       // setState(() => _distance = "Distance: ${_totalDistance.toStringAsFixed(2)} m");
       // Check if target distance is reached
-      if (distanceInKilometers >= targetDistance) {
+      // if (distanceInKilometers >= targetDistance) {
+      if (_distanceInKM >= targetDistance) {
         NotiService().showNotification(
           title: 'Service due!',
           body: 'You have reached your target distance of $targetDistance km',
@@ -218,7 +229,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadVehicles() async {
     const userId = '67cea5d3ef36ebb22c2d7bdb';
-    final response = await http.get(Uri.parse('http://192.168.1.110:5001/api/vehicles/$userId'));
+    final response = await http.get(Uri.parse('http://172.20.10.2:5001/api/vehicles/$userId'));
     if (response.statusCode == 200) {
       // final List<dynamic> data = jsonDecode(response.body);
       final Map<String, dynamic> data = jsonDecode(response.body);
@@ -233,6 +244,7 @@ class _HomePageState extends State<HomePage> {
           // 'name': '${vehicle['make']} ${vehicle['model']}',
           'year': vehicle['year'],
           'mileage': vehicle['currentMileage'],
+          'id': vehicle['id'],
         }).toList();
         if (_vehicles.isNotEmpty) {
           _selectedVehicle = _vehicles[0]['name'];
@@ -261,7 +273,7 @@ class _HomePageState extends State<HomePage> {
 
     const userId = '67cea5d3ef36ebb22c2d7bdb';
     try {
-      final response = await http.get(Uri.parse('http://192.168.1.110:5001/api/vehicles/$userId'));
+      final response = await http.get(Uri.parse('http://172.20.10.2:5001/api/vehicles/$userId'));
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
         final List<dynamic> upcomingEvents = data['upcomingEvents'];
@@ -317,9 +329,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _startTracking() {
-    if (!_isTracking) {
+    if (!_isMeasuring) {
       setState(() {
-        _isTracking = true;
+        _isMeasuring = true;
       });
       _connectToOBD(); // Automatically connect to the device when measuring starts
       _startContinuousReading();
@@ -333,21 +345,32 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _stopTracking() async {
-    if (_isTracking) {
+    if (_isMeasuring) {
       // _mileageTimer?.cancel();
 
       setState(() {
-        _isTracking = false;
+        _isMeasuring = false;
       });
 
+      final selectedVehicle = _vehicles.firstWhere(
+            (vehicle) => vehicle['name'] == _selectedVehicle,
+        // orElse: () => null,
+      );
+
+      // Debug prints
+      print("Selected vehicle: $_selectedVehicle");
+      print("Found vehicle: $selectedVehicle");
+      print("Vehicle ID: ${selectedVehicle['id']}");
+      print("New mileage: ${_mileage + _distanceInKM}");
+
       final response = await http.put(
-        Uri.parse('http://192.168.1.110:5001/api/vehicles/updateMileage'),
+        Uri.parse('http://172.20.10.2:5001/api/vehicles/updateMileage'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: jsonEncode(<String, dynamic>{
           'vehicleId': _vehicles.firstWhere((vehicle) => vehicle['name'] == _selectedVehicle)['id'],
-          'mileage': _mileage + _totalDistance,
+          'mileage': _mileage + _distanceInKM,
         }),
       );
 
@@ -552,21 +575,34 @@ class _HomePageState extends State<HomePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              ...mileageDigits.map((digit) => _buildMileageDigit(digit)).toList(),
+              // ...mileageDigits.map((digit) => _buildMileageDigit(digit)).toList(),
+              ...mileageDigits.asMap().map((index, digit) {
+                // Check if the digit is a decimal point
+                if (digit == '.') {
+                  return MapEntry(
+                    index,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: Text(
+                        '.',
+                        style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  );
+                } else {
+                  return MapEntry(index, _buildMileageDigit(digit));
+                }
+              }).values.toList(),
               const SizedBox(width: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                child: const Text(
+              const Text(
                   'km',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
                   ),
-                ),
               ),
             ],
           ),
@@ -611,18 +647,18 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildMileageDigit(String digit) {
     return Container(
-      width: 40,
-      height: 60,
-      margin: const EdgeInsets.symmetric(horizontal: 3),
+      width: 32,
+      height: 48,
+      margin: const EdgeInsets.symmetric(horizontal: 2),
       decoration: BoxDecoration(
         color: Colors.grey[200],
-        borderRadius: BorderRadius.circular(5),
+        borderRadius: BorderRadius.circular(4),
       ),
       child: Center(
         child: Text(
           digit,
           style: const TextStyle(
-            fontSize: 30,
+            fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -685,7 +721,8 @@ class _HomePageState extends State<HomePage> {
     // final String day = eventDate.day.toString();
     final String month = eventDate != null ? DateFormat('MMM').format(eventDate) : '';
     final String day = eventDate != null ? eventDate.day.toString() : '';
-    final int? mileageDifference = event['mileageDifference'];
+    final double? mileageDifference = event['mileageDifference'];
+    final String formattedMileageDifference = mileageDifference?.toStringAsFixed(1) ?? '0.0';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -696,7 +733,7 @@ class _HomePageState extends State<HomePage> {
       child: Row(
         children: [
           Container(
-            width: 85,
+            width: 100,
             height: 85,
             decoration: BoxDecoration(
               color: Colors.grey[300],
@@ -711,19 +748,19 @@ class _HomePageState extends State<HomePage> {
                 if (eventDate != null) Text(
                   month,
                   style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 if (eventDate != null) Text(
                   day,
                   style: const TextStyle(
-                    fontSize: 24,
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 if (mileageDifference != null) Text(
-                  '$mileageDifference km',
+                  '$formattedMileageDifference km',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -736,7 +773,7 @@ class _HomePageState extends State<HomePage> {
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
                     event['event'],

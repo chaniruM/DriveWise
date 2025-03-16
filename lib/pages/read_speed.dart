@@ -42,7 +42,7 @@ class _OBD2ScreenState extends State<OBD2Screen> {
     _requestPermissions();
     // _checkPermissionsAndListDevices();
     _monitorBluetoothState();
-    _listDevices();
+    // _listDevices();
   }
 
   Future<bool> _requestPermissions() async {
