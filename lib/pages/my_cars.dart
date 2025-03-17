@@ -24,15 +24,17 @@ class _MyCarsPageState extends State<MyCarsPage> {
 
   Future<void> fetchVehicles() async {
     const userId = '67cea5d3ef36ebb22c2d7bdb'; // Replace with the actual user ID
-    final url = Uri.parse('http://10.31.9.237:5001/api/vehicles/$userId');
+    final url = Uri.parse('http://172.20.10.2:5001/api/vehicles/$userId');
 
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
+        // final List<dynamic> data = json.decode(response.body);
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        final List<dynamic> cars = data['vehicles'];
         print('API Response: $data');
         setState(() {
-          vehicles = data.map((vehicle) => Vehicle.fromJson(vehicle)).toList();
+          vehicles = cars.map((vehicle) => Vehicle.fromJson(vehicle)).toList();
           isLoading = false;
         });
       } else {
