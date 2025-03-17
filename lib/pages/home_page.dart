@@ -43,6 +43,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _requestLocPermissions();
     _requestPermissions();
     _monitorBluetoothState();
     _loadData();
@@ -64,7 +65,7 @@ class _HomePageState extends State<HomePage> {
       Permission.bluetooth,
       Permission.bluetoothConnect,
       Permission.bluetoothScan,
-      Permission.location,
+      // Permission.location,
       Permission.notification,
     ].request();
 
@@ -73,6 +74,12 @@ class _HomePageState extends State<HomePage> {
     });
 
     return statuses.values.every((status) => status.isGranted);
+  }
+
+  Future<void> _requestLocPermissions() async {
+    await Permission.location.request();
+    await Permission.locationAlways.request();
+    await Permission.locationWhenInUse.request();
   }
 
 
@@ -316,18 +323,19 @@ class _HomePageState extends State<HomePage> {
       print("New mileage: ${_mileage + _distanceInKM}");
 
       final response = await http.put(
-        Uri.parse('http://172.20.10.2:5001/api/vehicles/updateMileage'),
+        Uri.parse('http://172.20.10.2:5001/api/updateMileage'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: jsonEncode(<String, dynamic>{
-          'vehicleId': _vehicles.firstWhere((vehicle) => vehicle['name'] == _selectedVehicle)['id'],
+          'userId': "67cea5d3ef36ebb22c2d7bdb",
+          'vehicleId': selectedVehicle['id'],
           'mileage': _mileage + _distanceInKM,
         }),
       );
 
       if (response.statusCode != 200) {
-        throw Exception('Failed to update mileage');
+        throw Exception('Failed to update mileage: ${response.body}'); 
       }
 
     }
