@@ -20,11 +20,11 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final FlutterBluePlus flutterBlue = FlutterBluePlus();
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-  double targetDistance = 1.0;
+  double targetDistance = 0.5;
   BluetoothDevice? _selectedDevice;
   BluetoothCharacteristic? _writeCharacteristic;
   BluetoothCharacteristic? _readCharacteristic;
-  String _distance = "Distance: 0.00 km";
+  // String _distance = "Distance: 0.00 km";
   bool _isMeasuring = false;
   List<Map<String, dynamic>> _speedData = [];
   double _totalDistance = 0.0;
@@ -39,6 +39,7 @@ class _HomePageState extends State<HomePage> {
   List<Map<String, dynamic>> _vehicles = [];
   List<Map<String, dynamic>> _upcomingEvents = [];
   List<Map<String, dynamic>> _recentSearches = [];
+  bool _notificationSent = false;
 
   @override
   void initState() {
@@ -200,15 +201,21 @@ class _HomePageState extends State<HomePage> {
       // final distanceInKilometers = _totalDistance / 1000;
       _distanceInKM = _totalDistance / 1000;
       // setState(() => _distance = "Distance: ${distanceInKilometers.toStringAsFixed(2)} km");
-      setState(() => _distance = "Distance: ${_distanceInKM.toStringAsFixed(2)} km");
+      // setState(() => _distance = "Distance: ${_distanceInKM.toStringAsFixed(2)} km");
+      setState(() {
+        // _distance = "Distance: ${_distanceInKM.toStringAsFixed(2)} km";
+        _mileage = _vehicles.firstWhere((vehicle) => vehicle['name'] == _selectedVehicle)['mileage'] + _distanceInKM;
+      });
       // setState(() => _distance = "Distance: ${_totalDistance.toStringAsFixed(2)} m");
       // Check if target distance is reached
       // if (distanceInKilometers >= targetDistance) {
-      if (_distanceInKM >= targetDistance) {
+      // if (_distanceInKM >= targetDistance){
+      if (_mileage >= _vehicles.firstWhere((vehicle) => vehicle['name'] == _selectedVehicle)['next_service'] && !_notificationSent) {
         NotiService().showNotification(
           title: 'Service due!',
-          body: 'You have reached your target distance of $targetDistance km',
+          body: 'Your regular vehicle maintenance for $_selectedVehicle is due. Please book an appointment asap.',
         );
+        _notificationSent = true;
       }
     }
   }
@@ -239,6 +246,7 @@ class _HomePageState extends State<HomePage> {
           'year': vehicle['year'],
           'mileage': vehicle['currentMileage'],
           'id': vehicle['id'],
+          'next_service': vehicle['nextService']
         }).toList();
         if (_vehicles.isNotEmpty) {
           _selectedVehicle = _vehicles[0]['name'];
@@ -295,8 +303,21 @@ class _HomePageState extends State<HomePage> {
 
   void _startTracking() {
     if (!_isMeasuring) {
+      // Reset distance tracking
+      _totalDistance = 0.0;
+      _distanceInKM = 0.0;
+      _speedData = [];
+      _notificationSent = false;
+
+      // Reset to base mileage before tracking
+      final baseVehicleMileage = _vehicles.firstWhere(
+              (vehicle) => vehicle['name'] == _selectedVehicle
+      )['mileage'];
+
       setState(() {
         _isMeasuring = true;
+        _mileage = baseVehicleMileage;
+        // _distance = "Distance: 0.00 km";
       });
       _connectToOBD(); // Automatically connect to the device when measuring starts
       _startContinuousReading();
@@ -320,7 +341,8 @@ class _HomePageState extends State<HomePage> {
       print("Selected vehicle: $_selectedVehicle");
       print("Found vehicle: $selectedVehicle");
       print("Vehicle ID: ${selectedVehicle['id']}");
-      print("New mileage: ${_mileage + _distanceInKM}");
+      print("New mileage: ${_mileage}");
+      // print("New mileage: ${_mileage + _distanceInKM}");
 
       final response = await http.put(
         Uri.parse('http://172.20.10.2:5001/api/updateMileage'),
@@ -330,12 +352,17 @@ class _HomePageState extends State<HomePage> {
         body: jsonEncode(<String, dynamic>{
           'userId': "67cea5d3ef36ebb22c2d7bdb",
           'vehicleId': selectedVehicle['id'],
-          'mileage': _mileage + _distanceInKM,
+          'mileage': _mileage,
+          // 'mileage': _mileage + _distanceInKM,
         }),
       );
 
       if (response.statusCode != 200) {
-        throw Exception('Failed to update mileage: ${response.body}'); 
+        throw Exception('Failed to update mileage: ${response.body}');
+      } else {
+        setState(() {
+          selectedVehicle['mileage'] += _distanceInKM;
+        });
       }
 
     }
@@ -361,7 +388,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     // Convert mileage to display format (91366 -> 9 1 3 6 6)
-    String mileageStr = _mileage.toString().padLeft(5, '0');
+    // String mileageStr = _mileage.toString().padLeft(5, '0');
+    String mileageStr = _mileage.toStringAsFixed(1).padLeft(5, '0');
     List<String> mileageDigits = mileageStr.split('');
 
     return Scaffold(
@@ -592,7 +620,7 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
 
-          Text(_distance, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          // Text(_distance, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -670,8 +698,6 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildEventCard(Map<String, dynamic> event) {
     final DateTime? eventDate = event['date'];
-    // final String month = DateFormat('MMM').format(eventDate);
-    // final String day = eventDate.day.toString();
     final String month = eventDate != null ? DateFormat('MMM').format(eventDate) : '';
     final String day = eventDate != null ? eventDate.day.toString() : '';
     final double? mileageDifference = event['mileageDifference'];
