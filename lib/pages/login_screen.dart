@@ -3,21 +3,9 @@ import 'package:drivewise/MainPage.dart';
 import 'package:drivewise/pages/quick_lookup_screen.dart';
 import 'package:drivewise/pages/Registration_Page.dart';
 import 'package:drivewise/services/api_service.dart';
+import 'package:drivewise/services/token_service.dart';
 import 'package:flutter/gestures.dart';
-
-void main() {
-  runApp(DriveWiseApp());
-}
-
-class DriveWiseApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: LoginScreen(),
-    );
-  }
-}
+import 'package:drivewise/widgets/sessionExpiredScreen.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -37,10 +25,25 @@ class _LoginScreenState extends State<LoginScreen> {
           _emailController.text, _passwordController.text);
 
       if (response.containsKey("token")) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MainPage()),
-        );
+        String token = response["token"];
+        await TokenService.saveToken(token);
+
+        // DEBUG: Print token expiry
+        bool isExpired = await TokenService.isTokenExpired();
+        print("Is token expired after login? $isExpired");
+
+        if (isExpired) {
+          // print("Session expired! Redirecting to SessionExpiredScreen...");
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => SessionExpiredScreen()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => MainPage()),
+          );
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -51,6 +54,9 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     }
   }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -177,19 +183,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   SizedBox(height: 10),
                   TextButton(
-                    onPressed: null, // Disable the default button tap
                     child: Text.rich(
                       TextSpan(
                         text: "Don't have an account? ",
                         style: TextStyle(color: Colors.white70),
-                        // Default text color
                         children: [
                           TextSpan(
                             text: "Register",
                             style: TextStyle(
                               color: Colors.lightBlueAccent,
                               fontWeight: FontWeight.bold,
-                            ), // Different color for "Register"
+                            ),
                             recognizer: TapGestureRecognizer()
                               ..onTap = () {
                                 Navigator.push(
@@ -203,6 +207,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                       ),
                     ),
+                    onPressed: () {},
                   ),
                   SizedBox(height: 20),
                   ElevatedButton(
