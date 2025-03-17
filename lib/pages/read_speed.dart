@@ -42,7 +42,7 @@ class _OBD2ScreenState extends State<OBD2Screen> {
     _requestPermissions();
     // _checkPermissionsAndListDevices();
     _monitorBluetoothState();
-    _listDevices();
+    // _listDevices();
   }
 
   Future<bool> _requestPermissions() async {
@@ -237,7 +237,7 @@ class _OBD2ScreenState extends State<OBD2Screen> {
     });
 
     if (_isMeasuring) {
-      // _connectToOBD(); // Automatically connect to the device when measuring starts
+      _connectToOBD(); // Automatically connect to the device when measuring starts
       _startContinuousReading();
     }
   }
