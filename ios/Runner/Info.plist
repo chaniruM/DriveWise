@@ -28,10 +28,8 @@
 	<true/>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>This app uses Bluetooth to connect to OBD-II devices for vehicle diagnostics.</string>
-
 	<key>NSBluetoothPeripheralUsageDescription</key>
-    <string>This app uses Bluetooth to connect to OBD-II devices for vehicle diagnostics.</string>
-
+	<string>This app uses Bluetooth to connect to OBD-II devices for vehicle diagnostics.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>This app requires location access to track vehicle movement and provide OBD-II data.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
@@ -46,6 +44,8 @@
 		<string>location</string>
 		<string>external-accessory</string>
 		<string>nearby-interaction</string>
+		<string>remote-notification</string>
+		<string>processing</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
