@@ -45,7 +45,6 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
-
   void _navigateToLogin() {
     if (mounted) {
       Navigator.of(context).pushReplacement(
@@ -61,9 +60,11 @@ class _MainPageState extends State<MainPage> {
   }
 
   void _onPageSelected(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
+    if (index < _pages.length) {
+      setState(() {
+        _currentIndex = index;
+      });
+    }
   }
 
   @override
@@ -125,24 +126,24 @@ class _MainPageState extends State<MainPage> {
                 Navigator.pop(context);
               },
             ),
-            // ListTile(
-            //   leading: const Icon(Icons.history, color: Colors.orange),
-            //   title: const Text('Trouble Codes'),
-            //   onTap: () {
-            //     _onPageSelected(4);
-            //     Navigator.pop(context);
-            //   },
-            // ),
             ListTile(
-              leading: const Icon(Icons.error, color: Colors.orange),
+              leading: const Icon(Icons.history, color: Colors.orange),
               title: const Text('Trouble Codes'),
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => TroubleCodePage()),
-                );
+                _onPageSelected(4);
+                Navigator.pop(context);
               },
             ),
+            // ListTile(
+            //   leading: const Icon(Icons.error, color: Colors.orange),
+            //   title: const Text('Trouble Codes'),
+            //   onTap: () {
+            //     Navigator.push(
+            //       context,
+            //       MaterialPageRoute(builder: (context) => TroubleCodePage()),
+            //     );
+            //   },
+            // ),
             ListTile(
               leading: const Icon(Icons.settings, color: Colors.orange),
               title: const Text('Settings'),
@@ -160,7 +161,7 @@ class _MainPageState extends State<MainPage> {
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (context) => LoginScreen()),
-                      (route) => false,
+                  (route) => false,
                 );
               },
             ),
@@ -168,19 +169,23 @@ class _MainPageState extends State<MainPage> {
         ),
       ),
       body: _pages[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Theme.of(context).bottomNavigationBarTheme.backgroundColor ?? Colors.black,
-        selectedItemColor: Colors.orange,
-        unselectedItemColor: Colors.grey,
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.directions_car), label: 'My Cars'),
-          BottomNavigationBarItem(icon: Icon(Icons.bluetooth), label: 'OBD-II'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-        ],
-        currentIndex: _currentIndex,
-        onTap: _onPageSelected,
-      ),
+    bottomNavigationBar: BottomNavigationWidget(onItemSelected: _onPageSelected),
+      // bottomNavigationBar: BottomNavigationBar(
+      //   backgroundColor:
+      //       Theme.of(context).bottomNavigationBarTheme.backgroundColor ??
+      //           Colors.black,
+      //   selectedItemColor: Colors.orange,
+      //   unselectedItemColor: Colors.grey,
+      //   items: [
+      //     BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+      //     BottomNavigationBarItem(
+      //         icon: Icon(Icons.directions_car), label: 'My Cars'),
+      //     BottomNavigationBarItem(icon: Icon(Icons.bluetooth), label: 'OBD-II'),
+      //     BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+      //   ],
+      //   currentIndex: _currentIndex,
+      //   onTap: _onPageSelected,
+      // ),
     );
   }
 }
