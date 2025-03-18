@@ -1,21 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-void main() {
-  runApp(DriveWiseApp());
-}
-
-class DriveWiseApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark(),
-      home: TroubleCodePage(),
-    );
-  }
-}
-
 class TroubleCodePage extends StatefulWidget {
   @override
   _TroubleCodePageState createState() => _TroubleCodePageState();
@@ -108,13 +93,6 @@ class _TroubleCodePageState extends State<TroubleCodePage> {
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: ""),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: ""),
-          BottomNavigationBarItem(icon: Icon(Icons.article), label: ""),
-        ],
       ),
     );
   }
