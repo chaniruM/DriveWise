@@ -6,7 +6,7 @@ class Vehicle {
   final String make;
   final String model;
   final int year;
-  final int currentMileage;
+  final double currentMileage;
   final DateTime licenseDateExpiry;
   final DateTime insuranceDateExpiry;
   final Map<String, String> specifications;
