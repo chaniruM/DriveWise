@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:drivewise/services/vehicle_service.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:drivewise/pages/register_vehicle_page.dart';
@@ -23,23 +24,18 @@ class _MyCarsPageState extends State<MyCarsPage> {
   }
 
   Future<void> fetchVehicles() async {
-    const userId = '67cea5d3ef36ebb22c2d7bdb'; // Replace with the actual user ID
-    final url = Uri.parse('http://172.20.10.2:5001/api/vehicles/$userId');
+    setState(() {
+      isLoading = true;
+    });
 
     try {
-      final response = await http.get(url);
-      if (response.statusCode == 200) {
-        // final List<dynamic> data = json.decode(response.body);
-        final Map<String, dynamic> data = jsonDecode(response.body);
-        final List<dynamic> cars = data['vehicles'];
-        print('API Response: $data');
-        setState(() {
-          vehicles = cars.map((vehicle) => Vehicle.fromJson(vehicle)).toList();
-          isLoading = false;
-        });
-      } else {
-        throw Exception('Failed to load vehicles');
-      }
+      final data = await VehicleService().fetchUserVehicles();
+      final List<dynamic> vehiclesData = data['vehicles'];
+
+      setState(() {
+        vehicles = vehiclesData.map((vehicleData) => Vehicle.fromJson(vehicleData)).toList();
+        isLoading = false;
+      });
     } catch (error) {
       print('Error fetching vehicles: $error');
       setState(() {
@@ -47,50 +43,6 @@ class _MyCarsPageState extends State<MyCarsPage> {
       });
     }
   }
-
-// class MyCarsPage extends StatelessWidget {
-//   // Dummy data for demonstration purposes
-//   final List<Vehicle> vehicles = [
-//     Vehicle(
-//       id: '1',
-//       nickname: 'City Cruiser',
-//       imageUrl: 'https://www.fmdt.info/vehicle/toyota/2019/corolla-32-white.png',
-//       registrationNumber: 'ABC-1234',
-//       make: 'Toyota',
-//       model: 'Corolla',
-//       year: 2019,
-//       currentMileage: 25000,
-//       licenseDateExpiry: DateTime(2023, 12, 31),
-//       insuranceDateExpiry: DateTime(2023, 10, 15),
-//       specifications: {
-//         'Engine Oil': '5W-30',
-//         'Transmission Oil': 'ATF WS',
-//         'Oil Filter': 'TOYOTA Genuine 90915-YZZF2',
-//         'Fuel Filter': 'TOYOTA Genuine 23300-21010',
-//         'Coolant': 'TOYOTA Super Long Life Coolant',
-//       },
-//     ),
-//     Vehicle(
-//       id: '2',
-//       nickname: 'Weekend Ride',
-//       imageUrl: 'https://di-honda-enrollment.s3.amazonaws.com/2020-civic-sedan/model-image-2020-civic-sedan-front.png',
-//       registrationNumber: 'XYZ-5678',
-//       make: 'Honda',
-//       model: 'Civic',
-//       year: 2020,
-//       currentMileage: 15000,
-//       licenseDateExpiry: DateTime(2024, 2, 28),
-//       insuranceDateExpiry: DateTime(2024, 3, 15),
-//       specifications: {
-//         'Engine Oil': '0W-20',
-//         'Transmission Oil': 'Honda ATF DW-1',
-//         'Oil Filter': 'Honda Genuine 15400-PLM-A02',
-//         'Fuel Filter': 'Honda Genuine 17048-SHJ-A30',
-//         'Coolant': 'Honda Long Life Antifreeze/Coolant Type 2',
-//       },
-//     ),
-//   ];
-
 
   @override
   Widget build(BuildContext context) {
@@ -103,14 +55,6 @@ class _MyCarsPageState extends State<MyCarsPage> {
             color: Colors.white
           ),
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.search, color: Colors.white,),
-            onPressed: () {
-              // Search functionality would go here
-            },
-          ),
-        ],
       ),
       body: Container(
         color: Theme.of(context).colorScheme.background,

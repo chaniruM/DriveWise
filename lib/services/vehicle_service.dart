@@ -3,7 +3,76 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class VehicleService {
-  final String baseUrl = 'http://192.168.1.110:5001/api'; // Replace with your actual API URL
+  final String userId = '67dadbe2affdc8cfdc59b1c8';
+  final String baseUrl = 'http://192.168.1.110:5001/api';
+
+  // Fetch user's vehicles
+  Future<Map<String, dynamic>> fetchUserVehicles() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/vehicles/$userId'));
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        return data;
+      } else {
+        throw Exception('Failed to load vehicles: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error in fetchUserVehicles: $e');
+      rethrow;
+    }
+  }
+
+  // Extract vehicles from API response
+  List<Map<String, dynamic>> extractVehicles(Map<String, dynamic> data) {
+    final List<dynamic> vehicles = data['vehicles'];
+
+    return vehicles.map((vehicle) => {
+      'name': vehicle['nickname'] ?? '${vehicle['make']} ${vehicle['model']}', // Fallback if nickname is null
+      'year': vehicle['year'] ?? 0,
+      'mileage': (vehicle['currentMileage'] ?? 0).toDouble(),
+      'id': vehicle['id'] ?? '',
+      'next_service': (vehicle['nextService'] ?? 0).toDouble()
+    }).toList();
+  }
+
+  // Extract upcoming events from API response
+  List<Map<String, dynamic>> extractUpcomingEvents(Map<String, dynamic> data) {
+    final List<dynamic> upcomingEvents = data['upcomingEvents'] ?? [];
+
+    return upcomingEvents.map((event) => {
+      'date': event['date'] != null ? DateTime.parse(event['date']) : null,
+      'event': event['type'] ?? 'Unknown Event',
+      'vehicle': event['vehicle'] ?? 'Unknown Vehicle',
+      'mileageDifference': (event['mileageDifference'] ?? 0).toDouble(),
+    }).toList();
+  }
+
+  // Update vehicle mileage
+  Future<void> updateMileage({
+    // required String userId,
+    required String vehicleId,
+    required double mileage,
+  }) async {
+    // Debug prints
+    print("Updating mileage for vehicle ID: $vehicleId");
+    print("New mileage: $mileage");
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/updateMileage'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, dynamic>{
+        'userId': userId,
+        'vehicleId': vehicleId,
+        'mileage': mileage,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update mileage: ${response.body}');
+    }
+  }
 
   Future<List<String>> fetchMakes() async {
     final response = await http.get(Uri.parse('$baseUrl/makes'));
@@ -54,7 +123,7 @@ class VehicleService {
   }
 
   Future<void> registerVehicle({
-    required String userId,
+    // required String userId,
     required String make,
     required String model,
     required String engineType,

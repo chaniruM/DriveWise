@@ -371,7 +371,7 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
     if (_formKey.currentState!.validate()) {
       try {
         await VehicleService().registerVehicle(
-          userId: '67dadbe2affdc8cfdc59b1c8', // Replace with the actual user ID
+          // userId: '67dadbe2affdc8cfdc59b1c8', // Replace with the actual user ID
           make: selectedMake!,
           model: selectedModel!,
           engineType: selectedEngine!,
