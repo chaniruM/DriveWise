@@ -18,6 +18,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  String userId = '67dadbe2affdc8cfdc59b1c8';
+  final String baseUrl = 'http://192.168.1.110:5001/api';
   final FlutterBluePlus flutterBlue = FlutterBluePlus();
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   double targetDistance = 0.5;
@@ -229,60 +231,55 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadVehicles() async {
-    const userId = '67cea5d3ef36ebb22c2d7bdb';
-    final response = await http.get(Uri.parse('http://172.20.10.2:5001/api/vehicles/$userId'));
-    if (response.statusCode == 200) {
-      // final List<dynamic> data = jsonDecode(response.body);
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      final List<dynamic> vehicles = data['vehicles'];
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/vehicles/$userId'));
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        final List<dynamic> vehicles = data['vehicles'];
 
-      // Debug: Print the fetched data
-      debugPrint('Fetched vehicles: $vehicles');
+        // Debug: Print the fetched data
+        debugPrint('Fetched vehicles: $vehicles');
 
-      setState(() {
-        _vehicles = vehicles.map((vehicle) => {
-          'name': vehicle['nickname'],
-          // 'name': '${vehicle['make']} ${vehicle['model']}',
-          'year': vehicle['year'],
-          'mileage': vehicle['currentMileage'],
-          'id': vehicle['id'],
-          'next_service': vehicle['nextService']
-        }).toList();
-        if (_vehicles.isNotEmpty) {
-          _selectedVehicle = _vehicles[0]['name'];
-          _mileage = _vehicles[0]['mileage'];
-        }
-      });
+        setState(() {
+          _vehicles = vehicles.map((vehicle) => {
+            'name': vehicle['nickname'] ?? '${vehicle['make']} ${vehicle['model']}', // Fallback if nickname is null
+            'year': vehicle['year'] ?? 0,
+            'mileage': (vehicle['currentMileage'] ?? 0).toDouble(),
+            'id': vehicle['id'] ?? '',
+            'next_service': (vehicle['nextService'] ?? 0).toDouble()
+          }).toList();
 
-      // Debug: Print the parsed _vehicles
-      debugPrint('Parsed _vehicles: $_vehicles');
-
-    } else {
-      throw Exception('Failed to load vehicles');
+          if (_vehicles.isNotEmpty) {
+            _selectedVehicle = _vehicles[0]['name'];
+            _mileage = _vehicles[0]['mileage'];
+          }
+        });
+      } else {
+        throw Exception('Failed to load vehicles');
+      }
+    } catch (e) {
+      debugPrint('Error in _loadVehicles: $e');
+      rethrow;
     }
   }
 
   Future<void> _loadUpcomingEvents() async {
-
-    const userId = '67cea5d3ef36ebb22c2d7bdb';
     try {
-      final response = await http.get(Uri.parse('http://172.20.10.2:5001/api/vehicles/$userId'));
+      final response = await http.get(Uri.parse('$baseUrl/vehicles/$userId'));
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
-        final List<dynamic> upcomingEvents = data['upcomingEvents'];
+        final List<dynamic> upcomingEvents = data['upcomingEvents'] ?? [];
 
         setState(() {
           _upcomingEvents = upcomingEvents.map((event) => {
             'date': event['date'] != null ? DateTime.parse(event['date']) : null,
-            'event': event['type'],
-            'vehicle': event['vehicle'],
-            'mileageDifference': event['mileageDifference'],
+            'event': event['type'] ?? 'Unknown Event',
+            'vehicle': event['vehicle'] ?? 'Unknown Vehicle',
+            'mileageDifference': (event['mileageDifference'] ?? 0).toDouble(),
           }).toList();
         });
 
-        // Debug: Print the parsed _upcomingEvents
         debugPrint('Parsed _upcomingEvents: $_upcomingEvents');
-
       } else {
         throw Exception('Failed to load upcoming events');
       }
@@ -334,7 +331,6 @@ class _HomePageState extends State<HomePage> {
 
       final selectedVehicle = _vehicles.firstWhere(
             (vehicle) => vehicle['name'] == _selectedVehicle,
-        // orElse: () => null,
       );
 
       // Debug prints
@@ -342,15 +338,14 @@ class _HomePageState extends State<HomePage> {
       print("Found vehicle: $selectedVehicle");
       print("Vehicle ID: ${selectedVehicle['id']}");
       print("New mileage: ${_mileage}");
-      // print("New mileage: ${_mileage + _distanceInKM}");
 
       final response = await http.put(
-        Uri.parse('http://172.20.10.2:5001/api/updateMileage'),
+        Uri.parse('$baseUrl/updateMileage'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: jsonEncode(<String, dynamic>{
-          'userId': "67cea5d3ef36ebb22c2d7bdb",
+          'userId': userId,
           'vehicleId': selectedVehicle['id'],
           'mileage': _mileage,
           // 'mileage': _mileage + _distanceInKM,
@@ -738,7 +733,7 @@ class _HomePageState extends State<HomePage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                if (mileageDifference != null) Text(
+                if (mileageDifference != null && eventDate == null) Text(
                   '$formattedMileageDifference km',
                   style: const TextStyle(
                     fontSize: 16,

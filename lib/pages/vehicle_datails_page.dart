@@ -39,13 +39,19 @@ class VehicleDetailsPage extends StatelessWidget {
                 children: [
                   // Basic Information
                   Text(
-                    '${vehicle.make} ${vehicle.model} (${vehicle.year})',
+                    // '${vehicle.make} ${vehicle.model} (${vehicle.year})',
+                    vehicle.nickname,
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 8),
                   _buildInfoCard('Vehicle Information', [
+                    _buildInfoRow('Make', vehicle.make),
+                    _buildInfoRow('Model', vehicle.model),
+                    _buildInfoRow('Engine', vehicle.engine),
+                    _buildInfoRow('Year of Manufacture', '${vehicle.year}'),
                     _buildInfoRow('Registration Number', vehicle.registrationNumber),
                     _buildInfoRow('Current Mileage', '${vehicle.currentMileage} km'),
+                    _buildInfoRow('Next Service Mileage', '${vehicle.nextServiceMileage} km'),
                   ]),
                   SizedBox(height: 16),
 
@@ -54,6 +60,11 @@ class VehicleDetailsPage extends StatelessWidget {
                     _buildExpiryRow(
                       'Revenue License',
                       vehicle.licenseDateExpiry,
+                      context,
+                    ),
+                    _buildExpiryRow(
+                      'Emissions Test',
+                      vehicle.emmissionsExpiry,
                       context,
                     ),
                     _buildExpiryRow(
@@ -66,22 +77,22 @@ class VehicleDetailsPage extends StatelessWidget {
 
                   // Specifications
                   _buildSpecificationsCard(),
-                  SizedBox(height: 16),
+                  SizedBox(height: 24),
 
-                  // Service Records Button
-                  ElevatedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Service Records will be implemented in the next phase')),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: Size(double.infinity, 50),
-                    ),
-                    child: Text('Service Records'),
-                  ),
-
-                  SizedBox(height: 16), // Space between buttons
+                  // // Service Records Button
+                  // ElevatedButton(
+                  //   onPressed: () {
+                  //     ScaffoldMessenger.of(context).showSnackBar(
+                  //       SnackBar(content: Text('Service Records will be implemented in the next phase')),
+                  //     );
+                  //   },
+                  //   style: ElevatedButton.styleFrom(
+                  //     minimumSize: Size(double.infinity, 50),
+                  //   ),
+                  //   child: Text('Service Records'),
+                  // ),
+                  //
+                  // SizedBox(height: 16), // Space between buttons
 
 
 // Inside the Widget tree, update the "View Products" button
@@ -102,7 +113,7 @@ class VehicleDetailsPage extends StatelessWidget {
                   ),
 
 
-                  SizedBox(height: 24),
+                  SizedBox(height: 16),
 
                   ElevatedButton(
                     onPressed: () {
@@ -118,6 +129,24 @@ class VehicleDetailsPage extends StatelessWidget {
                       minimumSize: const Size(double.infinity, 50),
                     ),
                     child: const Text('View Products', style: TextStyle(color: Colors.white)),
+                  ),
+
+                  SizedBox(height: 16),
+
+                  ElevatedButton(
+                    onPressed: () {
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) => const ProductRec(), // No parameters needed
+                      //   ),
+                      // );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      minimumSize: const Size(double.infinity, 50),
+                    ),
+                    child: const Text('Remove Vehicle', style: TextStyle(color: Colors.white)),
                   ),
 
 
