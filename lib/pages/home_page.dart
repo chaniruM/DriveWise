@@ -19,15 +19,12 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // String userId = '67dadbe2affdc8cfdc59b1c8';
-  // final String baseUrl = 'http://192.168.1.110:5001/api';
   final FlutterBluePlus flutterBlue = FlutterBluePlus();
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   double targetDistance = 0.5;
   BluetoothDevice? _selectedDevice;
   BluetoothCharacteristic? _writeCharacteristic;
   BluetoothCharacteristic? _readCharacteristic;
-  // String _distance = "Distance: 0.00 km";
   bool _isMeasuring = false;
   List<Map<String, dynamic>> _speedData = [];
   double _totalDistance = 0.0;
