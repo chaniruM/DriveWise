@@ -1,4 +1,6 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 class NotiService{
   final notificationPlugin = FlutterLocalNotificationsPlugin();
@@ -68,6 +70,35 @@ class NotiService{
       );
     } catch (e) {
       print("Error showing notification: $e");
+    }
+  }
+
+  //scheduling reminders
+  Future<void> scheduleNotification({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime scheduledDate,
+  }) async {
+    try {
+      final List<PendingNotificationRequest> pendingNotifications =
+      await notificationPlugin.pendingNotificationRequests();
+
+      bool alreadyScheduled = pendingNotifications.any((notification) => notification.id == id);
+
+      if (!alreadyScheduled) {
+        await notificationPlugin.zonedSchedule(
+          id,
+          title,
+          body,
+          tz.TZDateTime.from(scheduledDate, tz.local),
+          notificationDetails(),
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        );
+      }
+    } catch (e) {
+      print("Error scheduling notification: $e");
     }
   }
 }

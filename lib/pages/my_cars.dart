@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'package:drivewise/services/vehicle_service.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:drivewise/pages/register_vehicle_page.dart';
 import 'package:drivewise/pages/vehicle_datails_page.dart';
 import 'package:flutter/material.dart';
 import '../models/vehicle.dart';
+import '../services/notification_service.dart';
 import '../widgets/vehicle_card.dart';
 
 class MyCarsPage extends StatefulWidget {
@@ -16,6 +18,7 @@ class MyCarsPage extends StatefulWidget {
 class _MyCarsPageState extends State<MyCarsPage> {
   List<Vehicle> vehicles = [];
   bool isLoading = true;
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
   @override
   void initState() {
@@ -36,6 +39,47 @@ class _MyCarsPageState extends State<MyCarsPage> {
         vehicles = vehiclesData.map((vehicleData) => Vehicle.fromJson(vehicleData)).toList();
         isLoading = false;
       });
+
+      final NotiService notiService = NotiService();
+      await notiService.initNotifications();
+
+      // schedule reminders
+      for (var vehicle in vehicles) {
+        if (vehicle.licenseDateExpiry != null) {
+          DateTime expiryDate = DateTime.parse(vehicle.licenseDateExpiry! as String);
+          DateTime reminderDate = expiryDate.subtract(Duration(days: 7)); // Notify 7 days before expiry
+
+          await notiService.scheduleNotification(
+            id: vehicle.id.hashCode, // Unique ID per vehicle
+            title: "License Expiry Reminder",
+            body: "Your vehicle (${vehicle.nickname}) license expires soon!",
+            scheduledDate: reminderDate,
+          );
+        }
+        if (vehicle.emmissionsExpiry != null) {
+          DateTime expiryDate = DateTime.parse(vehicle.emmissionsExpiry! as String);
+          DateTime reminderDate = expiryDate.subtract(Duration(days: 7)); // Notify 7 days before expiry
+
+          await notiService.scheduleNotification(
+            id: vehicle.id.hashCode, // Unique ID per vehicle
+            title: "Emissions Test Reminder",
+            body: "Your vehicle (${vehicle.nickname}) emissions certificate expires soon!",
+            scheduledDate: reminderDate,
+          );
+        }
+        if (vehicle.insuranceDateExpiry != null) {
+          DateTime expiryDate = DateTime.parse(vehicle.insuranceDateExpiry! as String);
+          DateTime reminderDate = expiryDate.subtract(Duration(days: 7)); // Notify 7 days before expiry
+
+          await notiService.scheduleNotification(
+            id: vehicle.id.hashCode, // Unique ID per vehicle
+            title: "Insurance Expiry Reminder",
+            body: "Your vehicle (${vehicle.nickname}) insurance expires soon!",
+            scheduledDate: reminderDate,
+          );
+        }
+      }
+
     } catch (error) {
       print('Error fetching vehicles: $error');
       setState(() {
