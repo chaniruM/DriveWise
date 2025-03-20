@@ -164,7 +164,6 @@ class _HomePageState extends State<HomePage> {
   void _onDataReceived(List<int> data) {
     final response = utf8.decode(data).trim();
     final speedMatch = RegExp(r"41 0D ([0-9A-F]{2})").firstMatch(response);
-    // final dtcMatch = RegExp(r"43 ([0-9A-F ]+)").firstMatch(response);
 
     if (speedMatch != null) {
       final speedValue = int.parse(speedMatch.group(1)!, radix: 16);
@@ -197,19 +196,12 @@ class _HomePageState extends State<HomePage> {
     if (timeDiff > 0) {
       final distanceSegment = ((v1 + v2) / 2) * timeDiff;
       _totalDistance += distanceSegment;
-
-      // final distanceInKilometers = _totalDistance / 1000;
       _distanceInKM = _totalDistance / 1000;
-      // setState(() => _distance = "Distance: ${distanceInKilometers.toStringAsFixed(2)} km");
-      // setState(() => _distance = "Distance: ${_distanceInKM.toStringAsFixed(2)} km");
       setState(() {
-        // _distance = "Distance: ${_distanceInKM.toStringAsFixed(2)} km";
         _mileage = _vehicles.firstWhere((vehicle) => vehicle['name'] == _selectedVehicle)['mileage'] + _distanceInKM;
       });
-      // setState(() => _distance = "Distance: ${_totalDistance.toStringAsFixed(2)} m");
+
       // Check if target distance is reached
-      // if (distanceInKilometers >= targetDistance) {
-      // if (_distanceInKM >= targetDistance){
       if (_mileage >= _vehicles.firstWhere((vehicle) => vehicle['name'] == _selectedVehicle)['next_service'] && !_notificationSent) {
         NotiService().showNotification(
           title: 'Service due!',
@@ -231,13 +223,15 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadVehicles() async {
     try {
       final data = await VehicleService().fetchUserVehicles();
-      setState(() {
-        _vehicles = VehicleService().extractVehicles(data);
-        if (_vehicles.isNotEmpty) {
-          _selectedVehicle = _vehicles[0]['name'];
-          _mileage = _vehicles[0]['mileage'];
-        }
-      });
+      if (mounted) {
+        setState(() {
+          _vehicles = VehicleService().extractVehicles(data);
+          if (_vehicles.isNotEmpty) {
+            _selectedVehicle = _vehicles[0]['name'];
+            _mileage = _vehicles[0]['mileage'];
+          }
+        });
+      }
     } catch (e) {
       debugPrint('Error in _loadVehicles: $e');
       rethrow;
@@ -247,10 +241,12 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadUpcomingEvents() async {
     try {
       final data = await VehicleService().fetchUserVehicles();
-      setState(() {
-        _upcomingEvents = VehicleService().extractUpcomingEvents(data);
-      });
-      debugPrint('Parsed _upcomingEvents: $_upcomingEvents');
+      if (mounted) {
+        setState(() {
+          _upcomingEvents = VehicleService().extractUpcomingEvents(data);
+        });
+        debugPrint('Parsed _upcomingEvents: $_upcomingEvents');
+      }
     } catch (e) {
       debugPrint('Error loading upcoming events: $e');
     }
@@ -258,12 +254,14 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadRecentSearches() async {
     // mock data
-    setState(() {
-      _recentSearches = [
-        {'name': 'Engine Oil 5W-30', 'imageUrl': 'assets/engine_oil.png'},
-        {'name': 'Air Filter', 'imageUrl': 'assets/air_filter.png'},
-      ];
-    });
+    if (mounted) {
+      setState(() {
+        _recentSearches = [
+          {'name': 'Engine Oil 5W-30', 'imageUrl': 'assets/engine_oil.png'},
+          {'name': 'Air Filter', 'imageUrl': 'assets/air_filter.png'},
+        ];
+      });
+    }
   }
 
   void _startTracking() {

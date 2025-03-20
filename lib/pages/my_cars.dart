@@ -45,38 +45,46 @@ class _MyCarsPageState extends State<MyCarsPage> {
 
       // schedule reminders
       for (var vehicle in vehicles) {
-        if (vehicle.licenseDateExpiry != null) {
-          DateTime expiryDate = DateTime.parse(vehicle.licenseDateExpiry! as String);
-          DateTime reminderDate = expiryDate.subtract(Duration(days: 7)); // Notify 7 days before expiry
+        DateTime licenseExpiryDate = vehicle.licenseDateExpiry;
+        DateTime reminderDate = licenseExpiryDate.subtract(Duration(days: 7)); // Notify 7 days before expiry
 
+        if (reminderDate.isAfter(DateTime.now())) {
           await notiService.scheduleNotification(
-            id: vehicle.id.hashCode, // Unique ID per vehicle
+            id: vehicle.id.hashCode,
             title: "License Expiry Reminder",
             body: "Your vehicle (${vehicle.nickname}) license expires soon!",
             scheduledDate: reminderDate,
           );
+        } else {
+          print("License reminder date is in the past. Skipping notification for ${vehicle.nickname}");
         }
-        if (vehicle.emmissionsExpiry != null) {
-          DateTime expiryDate = DateTime.parse(vehicle.emmissionsExpiry! as String);
-          DateTime reminderDate = expiryDate.subtract(Duration(days: 7)); // Notify 7 days before expiry
 
+        DateTime emissionsExpiryDate = vehicle.emmissionsExpiry;
+        reminderDate = emissionsExpiryDate.subtract(Duration(days: 7)); // Notify 7 days before expiry
+
+        if (reminderDate.isAfter(DateTime.now())) {
           await notiService.scheduleNotification(
-            id: vehicle.id.hashCode, // Unique ID per vehicle
+            id: vehicle.id.hashCode + 1, // Different ID for each notification type
             title: "Emissions Test Reminder",
             body: "Your vehicle (${vehicle.nickname}) emissions certificate expires soon!",
             scheduledDate: reminderDate,
           );
+        } else {
+          print("Emissions reminder date is in the past. Skipping notification for ${vehicle.nickname}");
         }
-        if (vehicle.insuranceDateExpiry != null) {
-          DateTime expiryDate = DateTime.parse(vehicle.insuranceDateExpiry! as String);
-          DateTime reminderDate = expiryDate.subtract(Duration(days: 7)); // Notify 7 days before expiry
 
+        DateTime insuranceExpiryDate = vehicle.insuranceDateExpiry;
+        reminderDate = insuranceExpiryDate.subtract(Duration(days: 7)); // Notify 7 days before expiry
+
+        if (reminderDate.isAfter(DateTime.now())) {
           await notiService.scheduleNotification(
-            id: vehicle.id.hashCode, // Unique ID per vehicle
+            id: vehicle.id.hashCode + 2, // Different ID for each notification type
             title: "Insurance Expiry Reminder",
             body: "Your vehicle (${vehicle.nickname}) insurance expires soon!",
             scheduledDate: reminderDate,
           );
+        } else {
+          print("Insurance reminder date is in the past. Skipping notification for ${vehicle.nickname}");
         }
       }
 
