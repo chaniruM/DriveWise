@@ -1,3 +1,4 @@
+import 'package:drivewise/services/vehicle_service.dart';
 import 'package:flutter/material.dart';
 import '../models/vehicle.dart';
 // import 'package:drivewise/pages/maintenance_overview.dart';
@@ -79,29 +80,13 @@ class VehicleDetailsPage extends StatelessWidget {
                   _buildSpecificationsCard(),
                   SizedBox(height: 24),
 
-                  // // Service Records Button
-                  // ElevatedButton(
-                  //   onPressed: () {
-                  //     ScaffoldMessenger.of(context).showSnackBar(
-                  //       SnackBar(content: Text('Service Records will be implemented in the next phase')),
-                  //     );
-                  //   },
-                  //   style: ElevatedButton.styleFrom(
-                  //     minimumSize: Size(double.infinity, 50),
-                  //   ),
-                  //   child: Text('Service Records'),
-                  // ),
-                  //
-                  // SizedBox(height: 16), // Space between buttons
 
-
-// Inside the Widget tree, update the "View Products" button
                   ElevatedButton(
                     onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const ProductRec(), // No parameters needed
+                          builder: (context) => const ProductRec(),
                         ),
                       );
                     },
@@ -134,13 +119,45 @@ class VehicleDetailsPage extends StatelessWidget {
                   SizedBox(height: 16),
 
                   ElevatedButton(
-                    onPressed: () {
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder: (context) => const ProductRec(), // No parameters needed
-                      //   ),
-                      // );
+                    onPressed: () async {
+                      // Show confirmation dialog
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Remove Vehicle'),
+                          content: Text('Are you sure you want to remove ${vehicle.nickname}?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text('Remove'),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (confirmed == true) {
+                        try {
+                          // final vehicleService = VehicleService();
+                          await VehicleService().removeVehicle(vehicleId: vehicle.id);
+
+                          // Show success message
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Vehicle removed successfully')),
+                          );
+
+                          // Navigate back to the vehicle list screen
+                          Navigator.pop(context);
+                        } catch (e) {
+                          // Show error message
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Failed to remove vehicle: $e')),
+                          );
+                        }
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
@@ -148,6 +165,22 @@ class VehicleDetailsPage extends StatelessWidget {
                     ),
                     child: const Text('Remove Vehicle', style: TextStyle(color: Colors.white)),
                   ),
+
+                  // ElevatedButton(
+                  //   onPressed: () {
+                  //     // Navigator.push(
+                  //     //   context,
+                  //     //   MaterialPageRoute(
+                  //     //     builder: (context) => const ProductRec(), // No parameters needed
+                  //     //   ),
+                  //     // );
+                  //   },
+                  //   style: ElevatedButton.styleFrom(
+                  //     backgroundColor: Colors.red,
+                  //     minimumSize: const Size(double.infinity, 50),
+                  //   ),
+                  //   child: const Text('Remove Vehicle', style: TextStyle(color: Colors.white)),
+                  // ),
 
 
                   SizedBox(height: 24),

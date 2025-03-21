@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 class VehicleService {
   final String userId = '67dadbe2affdc8cfdc59b1c8';
-  final String baseUrl = 'http://192.168.1.110:5001/api';
+  final String baseUrl = 'http://172.20.10.3:5001/api';
 
   // Fetch user's vehicles
   Future<Map<String, dynamic>> fetchUserVehicles() async {
@@ -160,10 +160,33 @@ class VehicleService {
     );
 
     if (response.statusCode == 201) {
-      // Vehicle registered successfully
       print('Vehicle registered successfully');
     } else {
       throw Exception('Failed to register vehicle');
+    }
+  }
+
+  Future<void> removeVehicle({
+    required String vehicleId,
+  }) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/removeUserVehicle'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, dynamic>{
+          'userId': userId,
+          'vehicleId': vehicleId,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to remove vehicle: ${response.body}');
+      }
+    } catch (e) {
+      print('Error in removeVehicle: $e');
+      rethrow;
     }
   }
 }
