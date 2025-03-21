@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 
 class ApiService {
   // Change to your actual backend IP address or domain name
-  static const String baseUrl = "http://10.0.2.2:5000/api/auth";
+  static const String baseUrl = "http://10.0.2.2:5001/api/auth";
 
 
   // Login User
