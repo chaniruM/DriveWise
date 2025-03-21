@@ -1,22 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:drivewise/MainPage.dart';
 import 'package:drivewise/pages/quick_lookup_screen.dart';
+import 'package:drivewise/pages/Registration_Page.dart';
 import 'package:drivewise/services/api_service.dart';
-
-
-void main() {
-  runApp(DriveWiseApp());
-}
-
-class DriveWiseApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: LoginScreen(),
-    );
-  }
-}
+import 'package:drivewise/services/token_service.dart';
+import 'package:flutter/gestures.dart';
+import 'package:drivewise/widgets/sessionExpiredScreen.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -28,7 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  bool _isPasswordVisible = false; // Added password visibility state
+  bool _isPasswordVisible = false;
 
   void loginUser() async {
     if (_formKey.currentState!.validate()) {
@@ -36,18 +25,38 @@ class _LoginScreenState extends State<LoginScreen> {
           _emailController.text, _passwordController.text);
 
       if (response.containsKey("token")) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MainPage()),
-        );
+        String token = response["token"];
+        await TokenService.saveToken(token);
+
+        // DEBUG: Print token expiry
+        bool isExpired = await TokenService.isTokenExpired();
+        print("Is token expired after login? $isExpired");
+
+        if (isExpired) {
+          // print("Session expired! Redirecting to SessionExpiredScreen...");
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => SessionExpiredScreen()),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => MainPage()),
+          );
+        }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Invalid login credentials"),
-          backgroundColor: Colors.red,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Invalid login credentials"),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +108,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(height: 10),
                   TextFormField(
                     controller: _passwordController,
-                    obscureText: !_isPasswordVisible, // Password toggle
+                    obscureText: !_isPasswordVisible,
                     decoration: InputDecoration(
                       hintText: 'Password',
                       hintStyle: TextStyle(color: Colors.grey),
@@ -111,7 +120,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                          _isPasswordVisible
+                              ? Icons.visibility
+                              : Icons.visibility_off,
                           color: Colors.white70,
                         ),
                         onPressed: () {
@@ -128,7 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       }
                       return null;
                     },
-                  ), // Added missing comma
+                  ),
                   SizedBox(height: 20),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
@@ -162,19 +173,41 @@ class _LoginScreenState extends State<LoginScreen> {
                       'assets/images/google_logo.png',
                       height: 32,
                     ),
-                    onPressed: () {},
                     label: Text(
                       'Google',
                       style: TextStyle(color: Colors.black, fontSize: 18),
                     ),
+                    onPressed: () {
+                      // Handle Google login
+                    },
                   ),
                   SizedBox(height: 10),
                   TextButton(
-                    onPressed: () {},
-                    child: Text(
-                      "Don't have an account? Register",
-                      style: TextStyle(color: Colors.white70),
+                    child: Text.rich(
+                      TextSpan(
+                        text: "Don't have an account? ",
+                        style: TextStyle(color: Colors.white70),
+                        children: [
+                          TextSpan(
+                            text: "Register",
+                            style: TextStyle(
+                              color: Colors.lightBlueAccent,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          RegistrationScreen()),
+                                );
+                              },
+                          ),
+                        ],
+                      ),
                     ),
+                    onPressed: () {},
                   ),
                   SizedBox(height: 20),
                   ElevatedButton(
