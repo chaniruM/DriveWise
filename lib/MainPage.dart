@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:drivewise/main.dart';
+import 'package:drivewise/pages/MaintenanceOverview.dart';
 import 'package:drivewise/pages/store_locator.dart';
 import 'package:drivewise/widgets/BottomNavigationBar.dart';
 import 'package:flutter/material.dart';
@@ -25,7 +26,8 @@ class _MainPageState extends State<MainPage> {
   final List<Widget> _pages = [
     HomePage(),
     MyCarsPage(),
-    OBD2Screen(),
+    MaintenanceOverview(),
+    // OBD2Screen(),
     UserDetailsPage(),
     TroubleCodePage(),
   ];
