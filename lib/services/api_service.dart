@@ -12,8 +12,8 @@ class ApiService {
   //static const String baseUrl = "http://10.0.2.2:5001/api/auth";
 
 
-  static const String baseUrl = "http://192.168.154.131:5000/api/auth";
-  // static const String baseUrl = "http://192.168.1.16:5000/api/auth";// Update for production
+  static const String baseUrl = "http://192.168.207.56:5001/api/auth";
+  // static const String baseUrl = "http://192.168.207.56:5001/api/auth";// Update for production
   // **Save email to SharedPreferences**
   static Future<void> saveUserEmail(String email) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -104,4 +104,6 @@ class ApiService {
 
     return response;
   }
+
 }
+
