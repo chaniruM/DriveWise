@@ -1,32 +1,43 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:flutter/material.dart';
 import 'package:drivewise/services/token_service.dart';
-import 'package:drivewise/pages/login_screen.dart';
+import 'package:drivewise/widgets/sessionExpiredScreen.dart';
+import 'package:http_parser/http_parser.dart';
 
 class ApiService {
+  // Update baseUrl to include only the domain and port, not the /api/auth part
+  static const String baseUrl = "http://192.168.154.131:5000";
 
-  static const String baseUrl = "http://192.168.154.131:5000/api/auth";
-  // static const String baseUrl = "http://192.168.1.16:5000/api/auth";// Update for production
-  // **Save email to SharedPreferences**
+  // This makes it easier to create URLs for different API endpoints
+  static String _apiUrl(String endpoint) => "$baseUrl$endpoint";
+
+  // Helper method to get full image URL
+  static String getImageUrl(String path) {
+    // If the path already contains the full URL, return it as is
+    if (path.startsWith('http')) {
+      return path;
+    }
+    // Otherwise, construct the full URL
+    return "$baseUrl/$path";
+  }
+
   static Future<void> saveUserEmail(String email) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_email', email);
   }
 
-  // **Get saved email**
   static Future<String?> getUserEmail() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('user_email');
   }
 
-  // **Register User**
   static Future<Map<String, dynamic>> register(String username, String email, String password) async {
     try {
       final response = await http.post(
-        Uri.parse("$baseUrl/register"),
+        Uri.parse(_apiUrl("/api/auth/register")),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"username": username, "email": email, "password": password}),
       );
@@ -41,11 +52,10 @@ class ApiService {
     }
   }
 
-  // **Login User**
   static Future<Map<String, dynamic>> login(String email, String password) async {
     try {
       final response = await http.post(
-        Uri.parse("$baseUrl/login"),
+        Uri.parse(_apiUrl("/api/auth/login")),
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({"email": email, "password": password}),
       );
@@ -53,8 +63,8 @@ class ApiService {
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         if (responseData.containsKey("token")) {
-          await TokenService.saveToken(responseData["token"]); // Save token securely
-          await saveUserEmail(email); // Save email
+          await TokenService.saveToken(responseData["token"]);
+          await saveUserEmail(email);
         }
         return responseData;
       } else {
@@ -65,27 +75,43 @@ class ApiService {
     }
   }
 
-  // **General GET request**
+  // Generic GET request handler with token check and error handling
   static Future<http.Response> getRequest(String endpoint, BuildContext context) async {
     String? token = await TokenService.getToken();
+
+    if (token == null) {
+      _handleUnauthorized(context);
+      throw Exception("No authentication token found");
+    }
+
     final response = await http.get(
-      Uri.parse("$baseUrl/$endpoint"),
+      Uri.parse(_apiUrl("/api/$endpoint")),
       headers: {"Authorization": "Bearer $token"},
     );
 
     if (response.statusCode == 401) {
-      await TokenService.clearToken();
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => LoginScreen()));
+      _handleUnauthorized(context);
+      throw Exception("Unauthorized");
     }
 
     return response;
   }
 
-  // **General POST request**
-  static Future<http.Response> postRequest(String endpoint, Map<String, dynamic> data, BuildContext context) async {
+  // Generic POST request handler with token check and error handling
+  static Future<http.Response> postRequest(
+      String endpoint,
+      Map<String, dynamic> data,
+      BuildContext context
+      ) async {
     String? token = await TokenService.getToken();
+
+    if (token == null) {
+      _handleUnauthorized(context);
+      throw Exception("No authentication token found");
+    }
+
     final response = await http.post(
-      Uri.parse("$baseUrl/$endpoint"),
+      Uri.parse(_apiUrl("/api/$endpoint")),
       headers: {
         "Authorization": "Bearer $token",
         "Content-Type": "application/json",
@@ -94,10 +120,102 @@ class ApiService {
     );
 
     if (response.statusCode == 401) {
-      await TokenService.clearToken();
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => LoginScreen()));
+      _handleUnauthorized(context);
+      throw Exception("Unauthorized");
     }
 
     return response;
+  }
+
+  // Upload profile image
+  static Future<Map<String, dynamic>> uploadProfileImage(
+      File imageFile,
+      BuildContext context
+      ) async {
+    String? token = await TokenService.getToken();
+
+    if (token == null) {
+      _handleUnauthorized(context);
+      throw Exception("No authentication token found");
+    }
+
+    try {
+      // Create multipart request
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse(_apiUrl("/api/user/upload-profile-image")),
+      );
+
+      // Add token authorization
+      request.headers.addAll({
+        "Authorization": "Bearer $token",
+      });
+
+      // Determine file extension
+      String filename = imageFile.path.split('/').last;
+      String extension = filename.split('.').last.toLowerCase();
+      MediaType contentType;
+
+      // Set the appropriate content type based on file extension
+      switch (extension) {
+        case 'jpg':
+        case 'jpeg':
+          contentType = MediaType('image', 'jpeg');
+          break;
+        case 'png':
+          contentType = MediaType('image', 'png');
+          break;
+        default:
+          contentType = MediaType('image', 'jpeg'); // Default to jpeg
+      }
+
+      // Create the file multipart
+      var imageStream = http.ByteStream(imageFile.openRead());
+      var length = await imageFile.length();
+
+      var imageUpload = http.MultipartFile(
+        'profileImage',
+        imageStream,
+        length,
+        filename: filename,
+        contentType: contentType,
+      );
+
+      // Add file to request
+      request.files.add(imageUpload);
+
+      // Send request
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          ...jsonDecode(response.body),
+        };
+      } else if (response.statusCode == 401) {
+        _handleUnauthorized(context);
+        throw Exception("Unauthorized");
+      } else {
+        return {
+          'success': false,
+          'message': jsonDecode(response.body)['message'] ?? 'Failed to upload image',
+        };
+      }
+    } catch (e) {
+      return {
+        'success': false,
+        'message': e.toString(),
+      };
+    }
+  }
+
+  // Helper method to handle unauthorized access
+  static void _handleUnauthorized(BuildContext context) {
+    TokenService.clearToken();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => SessionExpiredScreen()),
+    );
   }
 }
