@@ -3,7 +3,6 @@ import 'package:drivewise/main.dart';
 import 'package:drivewise/widgets/BottomNavigationBar.dart';
 import 'package:flutter/material.dart';
 import 'package:drivewise/services/token_service.dart';
-import 'package:drivewise/pages/login_screen.dart';
 import 'pages/my_cars.dart';
 import 'pages/user_details_page.dart';
 import 'pages/read_speed.dart';
@@ -11,6 +10,8 @@ import 'pages/home_page.dart';
 import 'pages/settings_screen.dart';
 import 'pages/error_codes.dart';
 import 'package:drivewise/widgets/sessionExpiredScreen.dart';
+import 'package:drivewise/pages/contact_us.dart';
+import 'package:drivewise/widgets/logout_dialogs.dart';
 
 class MainPage extends StatefulWidget {
   @override
@@ -134,16 +135,6 @@ class _MainPageState extends State<MainPage> {
                 Navigator.pop(context);
               },
             ),
-            // ListTile(
-            //   leading: const Icon(Icons.error, color: Colors.orange),
-            //   title: const Text('Trouble Codes'),
-            //   onTap: () {
-            //     Navigator.push(
-            //       context,
-            //       MaterialPageRoute(builder: (context) => TroubleCodePage()),
-            //     );
-            //   },
-            // ),
             ListTile(
               leading: const Icon(Icons.settings, color: Colors.orange),
               title: const Text('Settings'),
@@ -155,21 +146,29 @@ class _MainPageState extends State<MainPage> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.logout, color: Colors.orange),
-              title: const Text('Log Out'),
+              leading:
+                  const Icon(Icons.contact_phone_rounded, color: Colors.orange),
+              title: const Text('Contact Us'),
               onTap: () {
-                Navigator.pushAndRemoveUntil(
+                Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => LoginScreen()),
-                  (route) => false,
+                  MaterialPageRoute(builder: (context) => ContactUsPage()),
                 );
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.logout, color: Colors.orange),
+              title: Text("Logout" ),
+              onTap: () {
+                showLogoutDialog(context); // Show confirmation dialog
               },
             ),
           ],
         ),
       ),
       body: _pages[_currentIndex],
-    bottomNavigationBar: BottomNavigationWidget(onItemSelected: _onPageSelected),
+      bottomNavigationBar:
+          BottomNavigationWidget(onItemSelected: _onPageSelected),
       // bottomNavigationBar: BottomNavigationBar(
       //   backgroundColor:
       //       Theme.of(context).bottomNavigationBarTheme.backgroundColor ??
