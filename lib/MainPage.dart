@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:drivewise/main.dart';
+import 'package:drivewise/pages/MaintenanceOverview.dart';
+import 'package:drivewise/pages/store_locator.dart';
 import 'package:drivewise/widgets/BottomNavigationBar.dart';
 import 'package:flutter/material.dart';
 import 'package:drivewise/services/token_service.dart';
@@ -24,7 +26,8 @@ class _MainPageState extends State<MainPage> {
   final List<Widget> _pages = [
     HomePage(),
     MyCarsPage(),
-    OBD2Screen(),
+    MaintenanceOverview(),
+    // OBD2Screen(),
     UserDetailsPage(),
     TroubleCodePage(),
   ];
@@ -132,6 +135,16 @@ class _MainPageState extends State<MainPage> {
               onTap: () {
                 _onPageSelected(4);
                 Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.location_pin, color: Colors.orange),
+              title: const Text('Store Locator'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => StoreLocator()),
+                );
               },
             ),
             // ListTile(

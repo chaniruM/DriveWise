@@ -8,6 +8,10 @@ import 'package:drivewise/pages/login_screen.dart';
 
 class ApiService {
 
+  // Change to your actual backend IP address or domain name
+  //static const String baseUrl = "http://10.0.2.2:5001/api/auth";
+
+
   static const String baseUrl = "http://192.168.154.131:5000/api/auth";
   // static const String baseUrl = "http://192.168.1.16:5000/api/auth";// Update for production
   // **Save email to SharedPreferences**
