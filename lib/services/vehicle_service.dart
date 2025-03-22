@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class VehicleService {
-  final String userId = '67dadbe2affdc8cfdc59b1c8';
+  final String userId = '67dd8c85594997b010ad7030';
   final String baseUrl = 'http://172.20.10.3:5001/api';
 
   // Fetch user's vehicles
@@ -186,6 +186,76 @@ class VehicleService {
       }
     } catch (e) {
       print('Error in removeVehicle: $e');
+      rethrow;
+    }
+  }
+
+  // Add this method to VehicleService class
+  Future<void> updateExpiryDate({
+    required String vehicleId,
+    required String expiryType,
+    required DateTime newDate,
+  }) async {
+    // Map the expiryType to the field name used in the backend
+    String fieldName = '';
+    switch (expiryType) {
+      case 'license':
+        fieldName = 'license_expiry_date';
+        break;
+      case 'insurance':
+        fieldName = 'insurance_expiry_date';
+        break;
+      case 'emissions':
+        fieldName = 'emmissions_expiry_date';
+        break;
+      default:
+        throw Exception('Invalid expiry type');
+    }
+
+    // Debug prints
+    print("Updating $fieldName for vehicle ID: $vehicleId");
+    print("New date: $newDate");
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/updateExpiryDate'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, dynamic>{
+        'userId': userId,
+        'vehicleId': vehicleId,
+        'expiryType': fieldName,
+        'newDate': newDate.toIso8601String(),
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update expiry date: ${response.body}');
+    }
+  }
+
+  Future<void> updateVehicleExpiry({
+    required String vehicleId,
+    required String expiryType,
+    required DateTime newDate,
+  }) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/vehicles/expiry/$vehicleId'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode({
+          'expiryType': expiryType,
+          'newDate': newDate.toIso8601String(),
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to update expiry date: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error in updateVehicleExpiry: $e');
       rethrow;
     }
   }

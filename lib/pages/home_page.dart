@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:drivewise/pages/MaintenanceOverview.dart';
 import 'package:drivewise/services/vehicle_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -34,8 +35,8 @@ class _HomePageState extends State<HomePage> {
 
   int _currentSlideIndex = 0;
   final PageController _pageController = PageController();
-  String _selectedVehicle = 'Jimny';
-  double _mileage = 91366; // Starting mileage shown in the image
+  String _selectedVehicle = 'Please Add a Vehicle';
+  double _mileage = 0; // Starting mileage shown in the image
   List<Map<String, dynamic>> _vehicles = [];
   List<Map<String, dynamic>> _upcomingEvents = [];
   List<Map<String, dynamic>> _recentSearches = [];
@@ -648,10 +649,12 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildEventCard(Map<String, dynamic> event) {
     final DateTime? eventDate = event['date'];
+    final String year = eventDate != null ? DateFormat('yyyy').format(eventDate) : '';
     final String month = eventDate != null ? DateFormat('MMM').format(eventDate) : '';
     final String day = eventDate != null ? eventDate.day.toString() : '';
     final double? mileageDifference = event['mileageDifference'];
     final String formattedMileageDifference = mileageDifference?.toStringAsFixed(1) ?? '0.0';
+    final String eventType = event['event'];
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -674,6 +677,13 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                if (eventDate != null) Text(
+                  year,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 if (eventDate != null) Text(
                   month,
                   style: const TextStyle(
@@ -724,9 +734,101 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
+          Container(
+            width: 50,
+            height: 85,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(8),
+                bottomRight: Radius.circular(8),
+              ),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.check, color: Colors.black),
+              onPressed: () => _handleEventAction(event),
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  Future<void> _handleEventAction(Map<String, dynamic> event) async {
+    final String eventType = event['event'];
+    final String vehicleName = event['vehicle'];
+
+    // Find the corresponding vehicle object
+    final vehicle = _vehicles.firstWhere(
+          (v) => v['name'] == vehicleName || "${v['make']} ${v['model']}" == vehicleName,
+      orElse: () => <String, dynamic>{},
+    );
+
+    if (vehicle.isEmpty) {
+      debugPrint('Vehicle not found for event: $eventType');
+      return;
+    }
+
+    // Handle based on event type
+    if (eventType.contains('Expiry')) {
+      try {
+        // Determine which expiry date to update
+        String expiryType;
+        if (eventType.contains('License')) {
+          expiryType = 'license_expiry_date';
+        } else if (eventType.contains('Insurance')) {
+          expiryType = 'insurance_expiry_date';
+        } else if (eventType.contains('Emissions') || eventType.contains('Emmissions')) {
+          expiryType = 'emmissions_expiry_date';
+        } else {
+          debugPrint('Unknown expiry type: $eventType');
+          return;
+        }
+
+        // Get current date from event
+        final DateTime? currentDate = event['date'];
+        if (currentDate == null) {
+          debugPrint('No date found for event: $eventType');
+          return;
+        }
+
+        // Calculate new expiry date (1 year later)
+        final DateTime newExpiryDate = DateTime(
+          currentDate.year + 1,
+          currentDate.month,
+          currentDate.day,
+        );
+
+        // Call API to update expiry date
+        await VehicleService().updateVehicleExpiry(
+          vehicleId: vehicle['id'],
+          expiryType: expiryType,
+          newDate: newExpiryDate,
+        );
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$eventType extended by 1 year')),
+        );
+
+        // Refresh data
+        await _loadUpcomingEvents();
+
+      } catch (e) {
+        debugPrint('Error updating expiry date: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update expiry date: $e')),
+        );
+      }
+    } else if (eventType.contains('Service')) {
+      // Navigate to maintenance page
+      // Navigator.push(
+      //   context,
+      //   MaterialPageRoute(
+      //     builder: (context) => MaintenanceOverview(vehicleId: vehicle['id']),
+      //   ),
+      // );
+    }
   }
 
   Widget _buildRecentlySearched() {
