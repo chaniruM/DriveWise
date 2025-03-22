@@ -230,7 +230,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadVehicles() async {
     const userId = '67cea5d3ef36ebb22c2d7bdb';
-    final response = await http.get(Uri.parse('http://172.20.10.2:5001/api/vehicles/$userId'));
+    final response = await http.get(Uri.parse('http://192.168.154.131:5000/api/vehicles/$userId'));
     if (response.statusCode == 200) {
       // final List<dynamic> data = jsonDecode(response.body);
       final Map<String, dynamic> data = jsonDecode(response.body);
@@ -266,7 +266,7 @@ class _HomePageState extends State<HomePage> {
 
     const userId = '67cea5d3ef36ebb22c2d7bdb';
     try {
-      final response = await http.get(Uri.parse('http://172.20.10.2:5001/api/vehicles/$userId'));
+      final response = await http.get(Uri.parse('http://192.168.154.131:5000/api/vehicles/$userId'));
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
         final List<dynamic> upcomingEvents = data['upcomingEvents'];
@@ -345,7 +345,7 @@ class _HomePageState extends State<HomePage> {
       // print("New mileage: ${_mileage + _distanceInKM}");
 
       final response = await http.put(
-        Uri.parse('http://172.20.10.2:5001/api/updateMileage'),
+        Uri.parse('http://192.168.154.131:5000/api/updateMileage'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
