@@ -24,7 +24,7 @@ class _BottomNavigationWidgetState extends State<BottomNavigationWidget> {
       items: const <BottomNavigationBarItem>[
         BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
         BottomNavigationBarItem(icon: Icon(Icons.directions_car), label: 'My Cars'),
-        BottomNavigationBarItem(icon: Icon(Icons.bluetooth), label: 'OBD-II'),
+        BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'PRE-RECORDS'),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
       ],
       currentIndex: _selectedIndex,

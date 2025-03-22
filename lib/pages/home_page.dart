@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:drivewise/services/vehicle_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -24,7 +25,6 @@ class _HomePageState extends State<HomePage> {
   BluetoothDevice? _selectedDevice;
   BluetoothCharacteristic? _writeCharacteristic;
   BluetoothCharacteristic? _readCharacteristic;
-  // String _distance = "Distance: 0.00 km";
   bool _isMeasuring = false;
   List<Map<String, dynamic>> _speedData = [];
   double _totalDistance = 0.0;
@@ -164,7 +164,6 @@ class _HomePageState extends State<HomePage> {
   void _onDataReceived(List<int> data) {
     final response = utf8.decode(data).trim();
     final speedMatch = RegExp(r"41 0D ([0-9A-F]{2})").firstMatch(response);
-    // final dtcMatch = RegExp(r"43 ([0-9A-F ]+)").firstMatch(response);
 
     if (speedMatch != null) {
       final speedValue = int.parse(speedMatch.group(1)!, radix: 16);
@@ -197,19 +196,12 @@ class _HomePageState extends State<HomePage> {
     if (timeDiff > 0) {
       final distanceSegment = ((v1 + v2) / 2) * timeDiff;
       _totalDistance += distanceSegment;
-
-      // final distanceInKilometers = _totalDistance / 1000;
       _distanceInKM = _totalDistance / 1000;
-      // setState(() => _distance = "Distance: ${distanceInKilometers.toStringAsFixed(2)} km");
-      // setState(() => _distance = "Distance: ${_distanceInKM.toStringAsFixed(2)} km");
       setState(() {
-        // _distance = "Distance: ${_distanceInKM.toStringAsFixed(2)} km";
         _mileage = _vehicles.firstWhere((vehicle) => vehicle['name'] == _selectedVehicle)['mileage'] + _distanceInKM;
       });
-      // setState(() => _distance = "Distance: ${_totalDistance.toStringAsFixed(2)} m");
+
       // Check if target distance is reached
-      // if (distanceInKilometers >= targetDistance) {
-      // if (_distanceInKM >= targetDistance){
       if (_mileage >= _vehicles.firstWhere((vehicle) => vehicle['name'] == _selectedVehicle)['next_service'] && !_notificationSent) {
         NotiService().showNotification(
           title: 'Service due!',
@@ -229,62 +221,31 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadVehicles() async {
-    const userId = '67cea5d3ef36ebb22c2d7bdb';
-    final response = await http.get(Uri.parse('http://192.168.154.131:5000/api/vehicles/$userId'));
-    if (response.statusCode == 200) {
-      // final List<dynamic> data = jsonDecode(response.body);
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      final List<dynamic> vehicles = data['vehicles'];
-
-      // Debug: Print the fetched data
-      debugPrint('Fetched vehicles: $vehicles');
-
-      setState(() {
-        _vehicles = vehicles.map((vehicle) => {
-          'name': vehicle['nickname'],
-          // 'name': '${vehicle['make']} ${vehicle['model']}',
-          'year': vehicle['year'],
-          'mileage': vehicle['currentMileage'],
-          'id': vehicle['id'],
-          'next_service': vehicle['nextService']
-        }).toList();
-        if (_vehicles.isNotEmpty) {
-          _selectedVehicle = _vehicles[0]['name'];
-          _mileage = _vehicles[0]['mileage'];
-        }
-      });
-
-      // Debug: Print the parsed _vehicles
-      debugPrint('Parsed _vehicles: $_vehicles');
-
-    } else {
-      throw Exception('Failed to load vehicles');
+    try {
+      final data = await VehicleService().fetchUserVehicles();
+      if (mounted) {
+        setState(() {
+          _vehicles = VehicleService().extractVehicles(data);
+          if (_vehicles.isNotEmpty) {
+            _selectedVehicle = _vehicles[0]['name'];
+            _mileage = _vehicles[0]['mileage'];
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint('Error in _loadVehicles: $e');
+      rethrow;
     }
   }
 
   Future<void> _loadUpcomingEvents() async {
-
-    const userId = '67cea5d3ef36ebb22c2d7bdb';
     try {
-      final response = await http.get(Uri.parse('http://192.168.154.131:5000/api/vehicles/$userId'));
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
-        final List<dynamic> upcomingEvents = data['upcomingEvents'];
-
+      final data = await VehicleService().fetchUserVehicles();
+      if (mounted) {
         setState(() {
-          _upcomingEvents = upcomingEvents.map((event) => {
-            'date': event['date'] != null ? DateTime.parse(event['date']) : null,
-            'event': event['type'],
-            'vehicle': event['vehicle'],
-            'mileageDifference': event['mileageDifference'],
-          }).toList();
+          _upcomingEvents = VehicleService().extractUpcomingEvents(data);
         });
-
-        // Debug: Print the parsed _upcomingEvents
         debugPrint('Parsed _upcomingEvents: $_upcomingEvents');
-
-      } else {
-        throw Exception('Failed to load upcoming events');
       }
     } catch (e) {
       debugPrint('Error loading upcoming events: $e');
@@ -293,12 +254,14 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadRecentSearches() async {
     // mock data
-    setState(() {
-      _recentSearches = [
-        {'name': 'Engine Oil 5W-30', 'imageUrl': 'assets/engine_oil.png'},
-        {'name': 'Air Filter', 'imageUrl': 'assets/air_filter.png'},
-      ];
-    });
+    if (mounted) {
+      setState(() {
+        _recentSearches = [
+          {'name': 'Engine Oil 5W-30', 'imageUrl': 'assets/engine_oil.png'},
+          {'name': 'Air Filter', 'imageUrl': 'assets/air_filter.png'},
+        ];
+      });
+    }
   }
 
   void _startTracking() {
@@ -326,15 +289,12 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _stopTracking() async {
     if (_isMeasuring) {
-      // _mileageTimer?.cancel();
-
       setState(() {
         _isMeasuring = false;
       });
 
       final selectedVehicle = _vehicles.firstWhere(
             (vehicle) => vehicle['name'] == _selectedVehicle,
-        // orElse: () => null,
       );
 
       // Debug prints
@@ -342,29 +302,20 @@ class _HomePageState extends State<HomePage> {
       print("Found vehicle: $selectedVehicle");
       print("Vehicle ID: ${selectedVehicle['id']}");
       print("New mileage: ${_mileage}");
-      // print("New mileage: ${_mileage + _distanceInKM}");
 
-      final response = await http.put(
-        Uri.parse('http://192.168.154.131:5000/api/updateMileage'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, dynamic>{
-          'userId': "67cea5d3ef36ebb22c2d7bdb",
-          'vehicleId': selectedVehicle['id'],
-          'mileage': _mileage,
-          // 'mileage': _mileage + _distanceInKM,
-        }),
-      );
+      try {
+        await VehicleService().updateMileage(
+          // userId: userId,
+          vehicleId: selectedVehicle['id'],
+          mileage: _mileage,
+        );
 
-      if (response.statusCode != 200) {
-        throw Exception('Failed to update mileage: ${response.body}');
-      } else {
         setState(() {
           selectedVehicle['mileage'] += _distanceInKM;
         });
+      } catch (e) {
+        debugPrint('Error updating mileage: $e');
       }
-
     }
   }
 
@@ -379,7 +330,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
-    // _mileageTimer?.cancel();
     _pageController.dispose();
     _selectedDevice?.disconnect();
     super.dispose();
@@ -738,7 +688,7 @@ class _HomePageState extends State<HomePage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                if (mileageDifference != null) Text(
+                if (mileageDifference != null && eventDate == null) Text(
                   '$formattedMileageDifference km',
                   style: const TextStyle(
                     fontSize: 16,
