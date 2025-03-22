@@ -377,19 +377,19 @@ class _HomePageState extends State<HomePage> {
         'A FAMILY OWNED BUSINESS\nWITH A LARGE, CLEAN WORKSHOP',
         '30 YEARS OF\nEXPERIENCE',
         'WITH ALL WORK BACKED BY A PARTS\nAND LABOUR GUARANTEE.',
-        'assets/workshop_image.jpg',
+        'https://www.bmfi.com.au/thumbnaillarge/Pic1.jpg',
       ),
       _buildPromotionalSlide(
         'EXPERT TECHNICIANS',
         'CERTIFIED\nSERVICE',
         'GUARANTEED QUALITY REPAIRS\nAND MAINTENANCE.',
-        'assets/technician_image.jpg',
+        'https://www.toyota.lk/wp-content/uploads/2024/10/Untitled-design.jpg',
       ),
       _buildPromotionalSlide(
         'GENUINE PARTS ONLY',
         'QUALITY\nASSURED',
         'WE NEVER COMPROMISE ON\nTHE PARTS WE USE.',
-        'assets/parts_image.jpg',
+        'https://totachi.lk/wp-content/uploads/2023/09/Mixed-Products_for-Facebook-Banner_1640x586.jpg',
       ),
     ];
 
@@ -442,12 +442,32 @@ class _HomePageState extends State<HomePage> {
           color: const Color(0xFF1A2238), // Darkened placeholder for image
           child: Align(
             alignment: Alignment.centerRight,
-            child: Container(
-              width: 250,
-              height: 250,
-              color: const Color(0xFF2A324B), // Placeholder for car image
-              child: const Center(
-                child: Icon(Icons.car_repair, size: 100, color: Colors.white54),
+            child: ClipRRect( // Clip the image to prevent overflow
+              child: Image.network(
+                imagePath,
+                fit: BoxFit.fill, // Use BoxFit.cover to fill the space
+                alignment: Alignment.center, // center the image
+                errorBuilder: (context, error, stackTrace) {
+                  // Handle image loading errors
+                  return const Center(
+                    child: Icon(Icons.error_outline,
+                        size: 100, color: Colors.white54),
+                  );
+                },
+                loadingBuilder: (BuildContext context, Widget child,
+                    ImageChunkEvent? loadingProgress) {
+                  if (loadingProgress == null) {
+                    return child;
+                  }
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                          loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
+                  );
+                },
               ),
             ),
           ),
@@ -471,12 +491,12 @@ class _HomePageState extends State<HomePage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.white),
+                  border: Border.all(color: Colors.orange),
                 ),
                 child: Text(
                   middleText,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Colors.orange,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -507,7 +527,6 @@ class _HomePageState extends State<HomePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // ...mileageDigits.map((digit) => _buildMileageDigit(digit)).toList(),
               ...mileageDigits.asMap().map((index, digit) {
                 // Check if the digit is a decimal point
                 if (digit == '.') {
