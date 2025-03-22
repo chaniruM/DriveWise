@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
+import 'package:drivewise/pages/login_screen.dart';
 
 class TokenService {
   static Future<String?> getToken() async {
@@ -16,6 +18,16 @@ class TokenService {
   static Future<void> clearToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.remove("auth_token");
+    await prefs.remove("user_email");
+  }
+
+  static Future<void> logout(BuildContext context) async {
+    await clearToken(); // Remove token and user email
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+      (route) => false, // Remove all previous routes
+    );
   }
 
   static Future<bool> isTokenExpired() async {
@@ -26,7 +38,8 @@ class TokenService {
       final parts = token.split('.');
       if (parts.length != 3) return true;
 
-      final payload = json.decode(utf8.decode(base64.decode(base64.normalize(parts[1]))));
+      final payload =
+          json.decode(utf8.decode(base64.decode(base64.normalize(parts[1]))));
       final expiry = payload["exp"] * 1000;
       final now = DateTime.now().millisecondsSinceEpoch;
 

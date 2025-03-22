@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:drivewise/pages/login_screen.dart';
 import 'package:drivewise/services/api_service.dart';
 import 'package:flutter/gestures.dart';
+import 'package:drivewise/pages/register_success_screen.dart';
 
 class RegistrationScreen extends StatefulWidget {
   @override
@@ -15,10 +16,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
-  String _selectedOption = "Email"; // Default selection
-
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
+  bool _isLoading = false; // Loading state
 
   @override
   Widget build(BuildContext context) {
@@ -52,15 +52,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                       "Confirm Password", _confirmPasswordController,
                       isConfirm: true),
                   SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildOptionSelector("Email", _selectedOption == "Email"),
-                      SizedBox(width: 20),
-                      _buildOptionSelector("SMS", _selectedOption == "SMS"),
-                    ],
-                  ),
-                  SizedBox(height: 24),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.lightBlueAccent,
@@ -70,19 +61,23 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    onPressed: _registerUser,
-                    child: Text(
-                      "Register",
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
+                    onPressed: _isLoading ? null : _registerUser,
+                    // Disable when loading
+                    child: _isLoading
+                        ? CircularProgressIndicator(
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white))
+                        : Text(
+                            "Register",
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
                   ),
                   SizedBox(height: 24),
                   Text.rich(
                     TextSpan(
                       text: "Already have an account? ",
                       style: TextStyle(color: Colors.white70, fontSize: 14),
-                      // Default text color
                       children: [
                         TextSpan(
                           text: "Login here",
@@ -115,11 +110,21 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   void _registerUser() async {
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      await Future.delayed(Duration(seconds: 3)); // Simulate delay
+
       final response = await ApiService.register(
         _usernameController.text,
         _emailController.text,
         _passwordController.text,
       );
+
+      setState(() {
+        _isLoading = false;
+      });
 
       if (response["error"] == true) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -129,16 +134,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               backgroundColor: Colors.red),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text("Registration Successful!",
-                  style: TextStyle(color: Colors.white)),
-              backgroundColor: Colors.green),
-        );
-
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => LoginScreen()),
+          MaterialPageRoute(builder: (context) => RegistrationSuccessScreen()),
         );
       }
     }
@@ -219,33 +217,6 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           }
           return null;
         },
-      ),
-    );
-  }
-
-  Widget _buildOptionSelector(String text, bool isSelected) {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedOption = text;
-        });
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? Colors.lightBlueAccent
-              : Colors.white.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.grey,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
       ),
     );
   }
