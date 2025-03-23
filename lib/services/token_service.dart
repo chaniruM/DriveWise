@@ -26,7 +26,7 @@ class TokenService {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => LoginScreen()),
-      (route) => false, // Remove all previous routes
+          (route) => false, // Remove all previous routes
     );
   }
 
@@ -39,7 +39,7 @@ class TokenService {
       if (parts.length != 3) return true;
 
       final payload =
-          json.decode(utf8.decode(base64.decode(base64.normalize(parts[1]))));
+      json.decode(utf8.decode(base64.decode(base64.normalize(parts[1]))));
       final expiry = payload["exp"] * 1000;
       final now = DateTime.now().millisecondsSinceEpoch;
 
@@ -47,8 +47,9 @@ class TokenService {
         return true; // Token expired
       }
 
-      // Refresh token if it's about to expire in 5 minutes
-      if ((expiry - now) < 5 * 60 * 1000) {
+      // Refresh token if it's about to expire in 3 days (for 30-day tokens)
+      // Using 3 days as a reasonable refresh window for a 30-day token
+      if ((expiry - now) < 3 * 24 * 60 * 60 * 1000) {
         await refreshAuthToken();
       }
 
