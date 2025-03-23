@@ -1,4 +1,6 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 class NotiService{
   final notificationPlugin = FlutterLocalNotificationsPlugin();
@@ -8,6 +10,17 @@ class NotiService{
 
   Future<void> initNotifications() async{
     if (isInit) return;
+
+    // Initialize timezone data
+    tz.initializeTimeZones();
+
+    try {
+      tz.setLocalLocation(tz.getLocation('Asia/Colombo'));
+    } catch (e) {
+      print("Error setting timezone: $e");
+      // Fallback to UTC if there's an error
+      tz.setLocalLocation(tz.UTC);
+    }
 
     const initSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
     const initSettingsiOS = DarwinInitializationSettings(
@@ -68,6 +81,42 @@ class NotiService{
       );
     } catch (e) {
       print("Error showing notification: $e");
+    }
+  }
+
+  //scheduling reminders
+  Future<void> scheduleNotification({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime scheduledDate,
+  }) async {
+    try {
+      // Check if the date is in the future
+      final now = DateTime.now();
+      if (scheduledDate.isBefore(now)) {
+        print("Warning: Attempted to schedule notification in the past. Skipping.");
+        return;
+      }
+
+      final List<PendingNotificationRequest> pendingNotifications =
+      await notificationPlugin.pendingNotificationRequests();
+
+      bool alreadyScheduled = pendingNotifications.any((notification) => notification.id == id);
+
+      if (!alreadyScheduled) {
+        await notificationPlugin.zonedSchedule(
+          id,
+          title,
+          body,
+          tz.TZDateTime.from(scheduledDate, tz.local),
+          notificationDetails(),
+          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        );
+      }
+    } catch (e) {
+      print("Error scheduling notification: $e");
     }
   }
 }

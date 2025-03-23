@@ -1,12 +1,12 @@
 import 'dart:convert';
-
+import 'package:drivewise/pages/MaintenanceOverview.dart';
+import 'package:drivewise/services/vehicle_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:async';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:http/http.dart' as http;
 
 import '../services/notification_service.dart';
 
@@ -20,25 +20,20 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final FlutterBluePlus flutterBlue = FlutterBluePlus();
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-  double targetDistance = 0.5;
   BluetoothDevice? _selectedDevice;
   BluetoothCharacteristic? _writeCharacteristic;
   BluetoothCharacteristic? _readCharacteristic;
-  // String _distance = "Distance: 0.00 km";
   bool _isMeasuring = false;
   List<Map<String, dynamic>> _speedData = [];
   double _totalDistance = 0.0;
   double _distanceInKM = 0.0;
   BluetoothAdapterState _bluetoothState = BluetoothAdapterState.unknown;
-  String _status = "Press Start to read distance";
-
   int _currentSlideIndex = 0;
   final PageController _pageController = PageController();
-  String _selectedVehicle = 'Jimny';
-  double _mileage = 91366; // Starting mileage shown in the image
+  String _selectedVehicle = 'Please Add a Vehicle';
+  double _mileage = 0; // Starting mileage
   List<Map<String, dynamic>> _vehicles = [];
   List<Map<String, dynamic>> _upcomingEvents = [];
-  List<Map<String, dynamic>> _recentSearches = [];
   bool _notificationSent = false;
 
   @override
@@ -52,10 +47,8 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadData() async {
     try {
-      // Mock data for demonstration, replace with actual DB connection
       await _loadVehicles();
       await _loadUpcomingEvents();
-      await _loadRecentSearches();
     } catch (e) {
       debugPrint('Error loading data: $e');
     }
@@ -66,7 +59,6 @@ class _HomePageState extends State<HomePage> {
       Permission.bluetooth,
       Permission.bluetoothConnect,
       Permission.bluetoothScan,
-      // Permission.location,
       Permission.notification,
     ].request();
 
@@ -93,9 +85,9 @@ class _HomePageState extends State<HomePage> {
         _listDevices(); // Start scanning when Bluetooth is enabled
       } else {
         print("Bluetooth is off");
-        setState(() {
-          _status = "Bluetooth is off. Please enable Bluetooth.";
-        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Bluetooth is off. Please enable Bluetooth.')),
+        );
       }
     });
   }
@@ -103,9 +95,9 @@ class _HomePageState extends State<HomePage> {
   Future<void> _listDevices() async {
 
     if (_bluetoothState != BluetoothAdapterState.on) {
-      setState(() {
-        _status = "Bluetooth is off. Please enable Bluetooth.";
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Bluetooth is off. Please enable Bluetooth.')),
+      );
       return;
     }
 
@@ -134,7 +126,9 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _connectToOBD() async {
     if (_selectedDevice == null) {
-      setState(() => _status = "No device selected");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No device selected.')),
+      );
       return;
     }
 
@@ -155,16 +149,19 @@ class _HomePageState extends State<HomePage> {
         }
       }
 
-      setState(() => _status = "Connected to ${_selectedDevice!.name}");
+      ScaffoldMessenger.of(context).showSnackBar( // Show success SnackBar
+        SnackBar(content: Text("Connected to ${_selectedDevice!.name}")),
+      );
     } catch (e) {
-      setState(() => _status = "Connection failed: $e");
+      ScaffoldMessenger.of(context).showSnackBar( // Show error SnackBar
+        SnackBar(content: Text("Connection failed: $e")),
+      );
     }
   }
 
   void _onDataReceived(List<int> data) {
     final response = utf8.decode(data).trim();
     final speedMatch = RegExp(r"41 0D ([0-9A-F]{2})").firstMatch(response);
-    // final dtcMatch = RegExp(r"43 ([0-9A-F ]+)").firstMatch(response);
 
     if (speedMatch != null) {
       final speedValue = int.parse(speedMatch.group(1)!, radix: 16);
@@ -197,19 +194,12 @@ class _HomePageState extends State<HomePage> {
     if (timeDiff > 0) {
       final distanceSegment = ((v1 + v2) / 2) * timeDiff;
       _totalDistance += distanceSegment;
-
-      // final distanceInKilometers = _totalDistance / 1000;
       _distanceInKM = _totalDistance / 1000;
-      // setState(() => _distance = "Distance: ${distanceInKilometers.toStringAsFixed(2)} km");
-      // setState(() => _distance = "Distance: ${_distanceInKM.toStringAsFixed(2)} km");
       setState(() {
-        // _distance = "Distance: ${_distanceInKM.toStringAsFixed(2)} km";
         _mileage = _vehicles.firstWhere((vehicle) => vehicle['name'] == _selectedVehicle)['mileage'] + _distanceInKM;
       });
-      // setState(() => _distance = "Distance: ${_totalDistance.toStringAsFixed(2)} m");
+
       // Check if target distance is reached
-      // if (distanceInKilometers >= targetDistance) {
-      // if (_distanceInKM >= targetDistance){
       if (_mileage >= _vehicles.firstWhere((vehicle) => vehicle['name'] == _selectedVehicle)['next_service'] && !_notificationSent) {
         NotiService().showNotification(
           title: 'Service due!',
@@ -229,76 +219,35 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _loadVehicles() async {
-    const userId = '67cea5d3ef36ebb22c2d7bdb';
-    final response = await http.get(Uri.parse('http://172.20.10.2:5001/api/vehicles/$userId'));
-    if (response.statusCode == 200) {
-      // final List<dynamic> data = jsonDecode(response.body);
-      final Map<String, dynamic> data = jsonDecode(response.body);
-      final List<dynamic> vehicles = data['vehicles'];
-
-      // Debug: Print the fetched data
-      debugPrint('Fetched vehicles: $vehicles');
-
-      setState(() {
-        _vehicles = vehicles.map((vehicle) => {
-          'name': vehicle['nickname'],
-          // 'name': '${vehicle['make']} ${vehicle['model']}',
-          'year': vehicle['year'],
-          'mileage': vehicle['currentMileage'],
-          'id': vehicle['id'],
-          'next_service': vehicle['nextService']
-        }).toList();
-        if (_vehicles.isNotEmpty) {
-          _selectedVehicle = _vehicles[0]['name'];
-          _mileage = _vehicles[0]['mileage'];
-        }
-      });
-
-      // Debug: Print the parsed _vehicles
-      debugPrint('Parsed _vehicles: $_vehicles');
-
-    } else {
-      throw Exception('Failed to load vehicles');
+    try {
+      final data = await VehicleService().fetchUserVehicles();
+      if (mounted) {
+        setState(() {
+          _vehicles = VehicleService().extractVehicles(data);
+          if (_vehicles.isNotEmpty) {
+            _selectedVehicle = _vehicles[0]['name'];
+            _mileage = _vehicles[0]['mileage'];
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint('Error in _loadVehicles: $e');
+      rethrow;
     }
   }
 
   Future<void> _loadUpcomingEvents() async {
-
-    const userId = '67cea5d3ef36ebb22c2d7bdb';
     try {
-      final response = await http.get(Uri.parse('http://172.20.10.2:5001/api/vehicles/$userId'));
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
-        final List<dynamic> upcomingEvents = data['upcomingEvents'];
-
+      final data = await VehicleService().fetchUserVehicles();
+      if (mounted) {
         setState(() {
-          _upcomingEvents = upcomingEvents.map((event) => {
-            'date': event['date'] != null ? DateTime.parse(event['date']) : null,
-            'event': event['type'],
-            'vehicle': event['vehicle'],
-            'mileageDifference': event['mileageDifference'],
-          }).toList();
+          _upcomingEvents = VehicleService().extractUpcomingEvents(data);
         });
-
-        // Debug: Print the parsed _upcomingEvents
         debugPrint('Parsed _upcomingEvents: $_upcomingEvents');
-
-      } else {
-        throw Exception('Failed to load upcoming events');
       }
     } catch (e) {
       debugPrint('Error loading upcoming events: $e');
     }
-  }
-
-  Future<void> _loadRecentSearches() async {
-    // mock data
-    setState(() {
-      _recentSearches = [
-        {'name': 'Engine Oil 5W-30', 'imageUrl': 'assets/engine_oil.png'},
-        {'name': 'Air Filter', 'imageUrl': 'assets/air_filter.png'},
-      ];
-    });
   }
 
   void _startTracking() {
@@ -326,15 +275,12 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _stopTracking() async {
     if (_isMeasuring) {
-      // _mileageTimer?.cancel();
-
       setState(() {
         _isMeasuring = false;
       });
 
       final selectedVehicle = _vehicles.firstWhere(
             (vehicle) => vehicle['name'] == _selectedVehicle,
-        // orElse: () => null,
       );
 
       // Debug prints
@@ -342,29 +288,20 @@ class _HomePageState extends State<HomePage> {
       print("Found vehicle: $selectedVehicle");
       print("Vehicle ID: ${selectedVehicle['id']}");
       print("New mileage: ${_mileage}");
-      // print("New mileage: ${_mileage + _distanceInKM}");
 
-      final response = await http.put(
-        Uri.parse('http://172.20.10.2:5001/api/updateMileage'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, dynamic>{
-          'userId': "67cea5d3ef36ebb22c2d7bdb",
-          'vehicleId': selectedVehicle['id'],
-          'mileage': _mileage,
-          // 'mileage': _mileage + _distanceInKM,
-        }),
-      );
+      try {
+        await VehicleService().updateMileage(
+          // userId: userId,
+          vehicleId: selectedVehicle['id'],
+          mileage: _mileage,
+        );
 
-      if (response.statusCode != 200) {
-        throw Exception('Failed to update mileage: ${response.body}');
-      } else {
         setState(() {
           selectedVehicle['mileage'] += _distanceInKM;
         });
+      } catch (e) {
+        debugPrint('Error updating mileage: $e');
       }
-
     }
   }
 
@@ -379,7 +316,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
-    // _mileageTimer?.cancel();
     _pageController.dispose();
     _selectedDevice?.disconnect();
     super.dispose();
@@ -410,9 +346,6 @@ class _HomePageState extends State<HomePage> {
             // Upcoming Events
             _buildUpcomingEvents(),
 
-            // Recently Searched
-            _buildRecentlySearched(),
-
             const SizedBox(height: 80), // Space for bottom nav bar
           ],
         ),
@@ -426,19 +359,19 @@ class _HomePageState extends State<HomePage> {
         'A FAMILY OWNED BUSINESS\nWITH A LARGE, CLEAN WORKSHOP',
         '30 YEARS OF\nEXPERIENCE',
         'WITH ALL WORK BACKED BY A PARTS\nAND LABOUR GUARANTEE.',
-        'assets/workshop_image.jpg',
+        'https://www.bmfi.com.au/thumbnaillarge/Pic1.jpg',
       ),
       _buildPromotionalSlide(
         'EXPERT TECHNICIANS',
         'CERTIFIED\nSERVICE',
         'GUARANTEED QUALITY REPAIRS\nAND MAINTENANCE.',
-        'assets/technician_image.jpg',
+        'https://www.toyota.lk/wp-content/uploads/2024/10/Untitled-design.jpg',
       ),
       _buildPromotionalSlide(
         'GENUINE PARTS ONLY',
         'QUALITY\nASSURED',
         'WE NEVER COMPROMISE ON\nTHE PARTS WE USE.',
-        'assets/parts_image.jpg',
+        'https://totachi.lk/wp-content/uploads/2023/09/Mixed-Products_for-Facebook-Banner_1640x586.jpg',
       ),
     ];
 
@@ -488,15 +421,35 @@ class _HomePageState extends State<HomePage> {
         Container(
           width: double.infinity,
           height: 300,
-          color: const Color(0xFF1A2238), // Darkened placeholder for image
+          color: const Color(0xFF1A2238),
           child: Align(
             alignment: Alignment.centerRight,
-            child: Container(
-              width: 250,
-              height: 250,
-              color: const Color(0xFF2A324B), // Placeholder for car image
-              child: const Center(
-                child: Icon(Icons.car_repair, size: 100, color: Colors.white54),
+            child: ClipRRect( // Clip the image to prevent overflow
+              child: Image.network(
+                imagePath,
+                fit: BoxFit.fill, // Use BoxFit.cover to fill the space
+                alignment: Alignment.center,
+                errorBuilder: (context, error, stackTrace) {
+                  // Handle image loading errors
+                  return const Center(
+                    child: Icon(Icons.error_outline,
+                        size: 100, color: Colors.white54),
+                  );
+                },
+                loadingBuilder: (BuildContext context, Widget child,
+                    ImageChunkEvent? loadingProgress) {
+                  if (loadingProgress == null) {
+                    return child;
+                  }
+                  return Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                          loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
+                  );
+                },
               ),
             ),
           ),
@@ -520,12 +473,12 @@ class _HomePageState extends State<HomePage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.white),
+                  border: Border.all(color: Colors.orange),
                 ),
                 child: Text(
                   middleText,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Colors.orange,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -556,7 +509,6 @@ class _HomePageState extends State<HomePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // ...mileageDigits.map((digit) => _buildMileageDigit(digit)).toList(),
               ...mileageDigits.asMap().map((index, digit) {
                 // Check if the digit is a decimal point
                 if (digit == '.') {
@@ -619,8 +571,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
-
-          // Text(_distance, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -698,13 +648,15 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildEventCard(Map<String, dynamic> event) {
     final DateTime? eventDate = event['date'];
+    final String year = eventDate != null ? DateFormat('yyyy').format(eventDate) : '';
     final String month = eventDate != null ? DateFormat('MMM').format(eventDate) : '';
     final String day = eventDate != null ? eventDate.day.toString() : '';
     final double? mileageDifference = event['mileageDifference'];
     final String formattedMileageDifference = mileageDifference?.toStringAsFixed(1) ?? '0.0';
+    final String eventType = event['event'];
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: const Color(0xFF0A1128),
         borderRadius: BorderRadius.circular(8),
@@ -713,7 +665,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           Container(
             width: 100,
-            height: 85,
+            height: 100,
             decoration: BoxDecoration(
               color: Colors.grey[300],
               borderRadius: const BorderRadius.only(
@@ -724,6 +676,13 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                if (eventDate != null) Text(
+                  year,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 if (eventDate != null) Text(
                   month,
                   style: const TextStyle(
@@ -738,7 +697,7 @@ class _HomePageState extends State<HomePage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                if (mileageDifference != null) Text(
+                if (mileageDifference != null && eventDate == null) Text(
                   '$formattedMileageDifference km',
                   style: const TextStyle(
                     fontSize: 16,
@@ -774,74 +733,102 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: Colors.green[500],
+              borderRadius: const BorderRadius.only(
+                topRight: Radius.circular(100),
+                topLeft: Radius.circular(100),
+                bottomRight: Radius.circular(100),
+                bottomLeft: Radius.circular(100),
+              ),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.check, color: Colors.black),
+              onPressed: () => _handleEventAction(event),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildRecentlySearched() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.only(bottom: 10),
-            child: Text(
-              'Recently searched',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.deepOrange,
-              ),
-            ),
-          ),
-          // If we have recent searches, display them in a row
-          if (_recentSearches.isNotEmpty)
-            SizedBox(
-              height: 100,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: _recentSearches.length,
-                itemBuilder: (context, index) {
-                  return Container(
-                    width: 100,
-                    margin: const EdgeInsets.only(right: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Placeholder for image
-                        Container(
-                          height: 50,
-                          width: 50,
-                          color: Colors.grey[300],
-                          child: const Icon(Icons.search),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _recentSearches[index]['name'],
-                          textAlign: TextAlign.center,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            )
-          else
-            Container(
-              height: 100,
-              alignment: Alignment.center,
-              child: const Text('No recent searches yet'),
-            ),
-        ],
-      ),
+  Future<void> _handleEventAction(Map<String, dynamic> event) async {
+    final String eventType = event['event'];
+    final String vehicleName = event['vehicle'];
+
+    // Find the corresponding vehicle object
+    final vehicle = _vehicles.firstWhere(
+          (v) => v['name'] == vehicleName || "${v['make']} ${v['model']}" == vehicleName,
+      orElse: () => <String, dynamic>{},
     );
+
+    if (vehicle.isEmpty) {
+      debugPrint('Vehicle not found for event: $eventType');
+      return;
+    }
+
+    // Handle based on event type
+    if (eventType.contains('Expiry')) {
+      try {
+        // Determine which expiry date to update
+        String expiryType;
+        if (eventType.contains('License')) {
+          expiryType = 'license_expiry_date';
+        } else if (eventType.contains('Insurance')) {
+          expiryType = 'insurance_expiry_date';
+        } else if (eventType.contains('Emissions') || eventType.contains('Emmissions')) {
+          expiryType = 'emmissions_expiry_date';
+        } else {
+          debugPrint('Unknown expiry type: $eventType');
+          return;
+        }
+
+        // Get current date from event
+        final DateTime? currentDate = event['date'];
+        if (currentDate == null) {
+          debugPrint('No date found for event: $eventType');
+          return;
+        }
+
+        // Calculate new expiry date (1 year later)
+        final DateTime newExpiryDate = DateTime(
+          currentDate.year + 1,
+          currentDate.month,
+          currentDate.day,
+        );
+
+        // update expiry date
+        await VehicleService().updateVehicleExpiry(
+          vehicleId: vehicle['id'],
+          expiryType: expiryType,
+          newDate: newExpiryDate,
+        );
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$eventType extended by 1 year')),
+        );
+
+        // Refresh data
+        await _loadUpcomingEvents();
+
+      } catch (e) {
+        debugPrint('Error updating expiry date: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update expiry date: $e')),
+        );
+      }
+    } else if (eventType.contains('Service')) {
+      // Navigate to maintenance page
+      // Navigator.push(
+      //   context,
+      //   MaterialPageRoute(
+      //     builder: (context) => MaintenanceOverview(vehicleId: vehicle['id']),
+      //   ),
+      // );
+    }
   }
 }

@@ -18,22 +18,29 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
 
   bool _isPasswordVisible = false;
+  bool _isLoading = false; // 🔹 Loading state
 
   void loginUser() async {
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true; // Start loading
+      });
+
       var response = await ApiService.login(
           _emailController.text, _passwordController.text);
+
+      setState(() {
+        _isLoading = false; // Stop loading
+      });
 
       if (response.containsKey("token")) {
         String token = response["token"];
         await TokenService.saveToken(token);
 
-        // DEBUG: Print token expiry
         bool isExpired = await TokenService.isTokenExpired();
         print("Is token expired after login? $isExpired");
 
         if (isExpired) {
-          // print("Session expired! Redirecting to SessionExpiredScreen...");
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => SessionExpiredScreen()),
@@ -54,9 +61,6 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     }
   }
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -141,20 +145,25 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                   ),
                   SizedBox(height: 20),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.lightBlueAccent,
-                      minimumSize: Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    onPressed: loginUser,
-                    child: Text(
-                      'Login',
-                      style: TextStyle(fontSize: 18, color: Colors.white),
-                    ),
-                  ),
+
+                  // 🔹 Show loading spinner when logging in
+                  _isLoading
+                      ? CircularProgressIndicator(color: Colors.lightBlueAccent)
+                      : ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.lightBlueAccent,
+                            minimumSize: Size(double.infinity, 50),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          onPressed: loginUser,
+                          child: Text(
+                            'Login',
+                            style: TextStyle(fontSize: 18, color: Colors.white),
+                          ),
+                        ),
+
                   SizedBox(height: 15),
                   Text(
                     'Or Login With',

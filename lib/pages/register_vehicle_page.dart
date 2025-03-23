@@ -1,3 +1,5 @@
+import 'package:drivewise/pages/my_cars.dart';
+import 'package:drivewise/services/vehicle_service.dart';
 import 'package:flutter/material.dart';
 
 class RegisterVehiclePage extends StatefulWidget {
@@ -7,34 +9,89 @@ class RegisterVehiclePage extends StatefulWidget {
 
 class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
   final _formKey = GlobalKey<FormState>();
-  String? selectedMake, selectedModel, selectedYear, selectedEngine;
-  final TextEditingController _vinController = TextEditingController();
+  String? selectedMake, selectedModel, selectedYear, selectedEngine, selectedBrand;
   final TextEditingController _regNumberController = TextEditingController();
+  final TextEditingController _nicknameController = TextEditingController();
   DateTime? _licenseExpiryDate;
   DateTime? _insuranceExpiryDate;
+  DateTime? _emmissionsExpiryDate;
 
   // Service Information Fields
   TextEditingController _odometerController = TextEditingController();
   TextEditingController _nextServiceController = TextEditingController();
 
-  // Slider Values
-  double _dailyTravelDistance = 100;
-  double _longestTripDistance = 200;
+  // Lists for dropdown options
+  List<String> makes = [];
+  List<String> models = [];
+  List<String> engineTypes = [];
+  List<String> years = [];
 
-  // Radio Button Groups
-  int? _vehicleUsageFrequency; // Group for "How often do you use this vehicle?"
-  int? _longTripFrequency;     // Group for "How often do you go on such excursions?"
+  @override
+  void initState() {
+    super.initState();
+    _loadMakes();
+  }
+
+  Future<void> _loadMakes() async {
+    try {
+      List<String> fetchedMakes = await VehicleService().fetchMakes();
+      setState(() {
+        makes = fetchedMakes;
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future<void> _loadModels(String make) async {
+    try {
+      List<String> fetchedModels = await VehicleService().fetchModels(make);
+      setState(() {
+        models = fetchedModels;
+        selectedModel = null;
+        engineTypes = [];
+        years = [];
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future<void> _loadEngines(String make, String model) async {
+    try {
+      List<String> fetchedEngines = await VehicleService().fetchEngines(make, model);
+      setState(() {
+        engineTypes = fetchedEngines;
+        selectedEngine = null;
+        years = [];
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future<void> _loadYears(String make, String model, String engine) async {
+    try {
+      List<String> fetchedYears = await VehicleService().fetchYears(make, model, engine);
+      setState(() {
+        years = fetchedYears;
+        selectedYear = null;
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Register New Vehicle'),
+        title: const Text('Register New Vehicle'),
         foregroundColor: Colors.white,
       ),
       body: Container(
-        color: Color(0xFF030B23),
-        padding: EdgeInsets.all(16),
+        color: const Color(0xFF030B23),
+        padding: const EdgeInsets.all(16),
         child: SingleChildScrollView(
           child: Form(
             key: _formKey,
@@ -42,7 +99,7 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Generic Information Section
-                Text(
+                const Text(
                   'Generic Information',
                   style: TextStyle(
                     color: Colors.orangeAccent,
@@ -50,38 +107,51 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                _buildDropdownRow('Make', ['Toyota', 'Honda', 'Ford'], (val) => setState(() => selectedMake = val)),
-                SizedBox(height: 16), // Add space between dropdowns
-                _buildDropdownRow('Model', ['Model X', 'Civic', 'Mustang'], (val) => setState(() => selectedModel = val)),
-                SizedBox(height: 16), // Add space between dropdowns
-                _buildDropdownRow('Year', ['2023', '2022', '2021'], (val) => setState(() => selectedYear = val)),
-                SizedBox(height: 16), // Add space between dropdowns
-                _buildDropdownRow('Engine', ['V6', 'V8', 'Electric'], (val) => setState(() => selectedEngine = val)),
+                SizedBox(height: 16),
 
-                SizedBox(height: 20),
-                Center(child: Text('Or', style: TextStyle(color: Colors.white, fontSize: 16))),
-                SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _vinController,
-                        decoration: _inputDecoration('VIN'),
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    ElevatedButton(
-                      onPressed: () {},
-                      child: Text('Open Camera'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orangeAccent,
-                      ),
-                    ),
-                  ],
+                _buildDropdownRow(
+                    'Make',
+                    makes,
+                    (val) {
+                      setState(() => selectedMake = val);
+                      if (val != null) _loadModels(val);
+                    }
+                ),
+                SizedBox(height: 16),
+
+                // Model Dropdown
+                _buildDropdownRow(
+                    'Model',
+                    models,
+                    (val){
+                      setState(() => selectedModel = val);
+                      if (val != null && selectedMake != null) _loadEngines(selectedMake!, val);
+                    },
+                ),
+                const SizedBox(height: 16),
+
+                // Engine Dropdown
+                _buildDropdownRow(
+                    'Engine',
+                    engineTypes,
+                    (val) {
+                      setState(() => selectedEngine = val);
+                      if (val != null && selectedMake != null && selectedModel != null) {
+                        _loadYears(selectedMake!, selectedModel!, val);
+                      }
+                    },
+                ),
+                const SizedBox(height: 16),
+
+                // Year Dropdown
+                _buildDropdownRow(
+                    'Year',
+                    years,
+                    (val) => setState(() => selectedYear = val),
                 ),
 
-                SizedBox(height: 20),
+
+                const SizedBox(height: 20),
                 _buildTextField('Registration No', _regNumberController, (value) {
                   if (value == null || value.isEmpty) {
                     return 'Registration number is required';
@@ -91,27 +161,17 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
                   }
                   return null;
                 }),
-                SizedBox(height: 16),
-                _buildDatePicker('Revenue License Expiry Date', _licenseExpiryDate, (date) {
-                  if (date == null) return 'Please select a valid date';
-                  return null;
-                }),
-                SizedBox(height: 16),
-                _buildDatePicker('Insurance Renewal Date', _insuranceExpiryDate, (date) {
-                  if (date == null) return 'Please select a valid date';
-                  return null;
-                }),
 
                 // Service Information Section
-                SizedBox(height: 20),
-                Text(
+                const SizedBox(height: 20),
+                const Text(
                   "Service Information",
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.orangeAccent),
                 ),
                 SizedBox(height: 10),
 
                 // Odometer
-                _buildTextField('Odometer', _odometerController, (value) {
+                _buildTextField('Current Odometer Reading', _odometerController, (value) {
                   if (value == null || value.isEmpty) {
                     return 'Odometer is required';
                   }
@@ -121,30 +181,10 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
                   return null;
                 }),
 
-                // Buttons for OBD2 or Camera
-                Row(
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {},
-                      child: Text("Use OBD2"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orangeAccent, // Button color
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    ElevatedButton(
-                      onPressed: () {},
-                      child: Text("Open Camera"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orangeAccent, // Button color
-                      ),
-                    ),
-                  ],
-                ),
                 SizedBox(height: 20),
 
                 // Next Service
-                _buildTextField('Next Service', _nextServiceController, (value) {
+                _buildTextField('Next Service Mileage', _nextServiceController, (value) {
                   if (value == null || value.isEmpty) {
                     return 'Next service date is required';
                   }
@@ -155,14 +195,6 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
                 }),
                 SizedBox(height: 10),
 
-                ElevatedButton(
-                  onPressed: () {},
-                  child: Text("Open Camera"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orangeAccent, // Button color
-                  ),
-                ),
-                SizedBox(height: 20),
 
                 // Revenue License Expiry Date Picker
                 _buildDatePicker("Revenue License Expiry Date", _licenseExpiryDate, (date) {
@@ -172,6 +204,16 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
                 }),
 
                 SizedBox(height: 16),
+
+                // Emissions Test Expiry Date Picker
+                _buildDatePicker("Emissions Test Expiry Date", _emmissionsExpiryDate, (date) {
+                  setState(() {
+                    _emmissionsExpiryDate = date;
+                  });
+                }),
+
+                SizedBox(height: 16),
+
                 // Insurance Renewal Date Picker
                 _buildDatePicker("Insurance Renewal Date", _insuranceExpiryDate, (date) {
                   setState(() {
@@ -181,169 +223,25 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
 
                 SizedBox(height: 20),
 
-                // Travel Information
-                Text(
-                  "How much do you travel in this vehicle on a regular day?",
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-                Slider(
-                  value: _dailyTravelDistance,
-                  min: 0,
-                  max: 500,
-                  divisions: 50,
-                  label: "${_dailyTravelDistance.toStringAsFixed(0)} km",
-                  onChanged: (value) {
-                    setState(() {
-                      _dailyTravelDistance = value;
-                    });
-                  },
-                  activeColor: Colors.orangeAccent, // Set the active color
-                  inactiveColor: Colors.white54,
-                ),
+                _buildDropdownRow('Brand', ['Toyota', 'Totachi', 'LukOil', 'Caltex', 'Valvoline'], (val) => setState(() => selectedBrand = val)),
                 SizedBox(height: 16),
 
-                Text(
-                  "How often do you use this vehicle?",
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-                Column(
-                  children: [
-                    RadioListTile<int>(
-                      title: Text("Once a week", style: TextStyle(color: Colors.white)),
-                      value: 1,
-                      groupValue: _vehicleUsageFrequency,
-                      onChanged: (int? value) {
-                        setState(() {
-                          _vehicleUsageFrequency = value;
-                        });
-                      },
-                      tileColor: Colors.white, // Change the background color of the tile
-                      activeColor: Colors.orange,
-                    ),
-                    RadioListTile<int>(
-                      title: Text("2-4 days a week", style: TextStyle(color: Colors.white)),
-                      value: 2,
-                      groupValue: _vehicleUsageFrequency,
-                      onChanged: (int? value) {
-                        setState(() {
-                          _vehicleUsageFrequency = value;
-                        });
-                      },
-                      tileColor: Colors.white, // Change the background color of the tile
-                      activeColor: Colors.orange,
-                    ),
-                    RadioListTile<int>(
-                      title: Text("4-6 days a week", style: TextStyle(color: Colors.white)),
-                      value: 3,
-                      groupValue: _vehicleUsageFrequency,
-                      onChanged: (int? value) {
-                        setState(() {
-                          _vehicleUsageFrequency = value;
-                        });
-                      },
-                      tileColor: Colors.white, // Change the background color of the tile
-                      activeColor: Colors.orange,
-                    ),
-                    RadioListTile<int>(
-                      title: Text("Daily", style: TextStyle(color: Colors.white)),
-                      value: 4,
-                      groupValue: _vehicleUsageFrequency,
-                      onChanged: (int? value) {
-                        setState(() {
-                          _vehicleUsageFrequency = value;
-                        });
-                      },
-                      tileColor: Colors.white, // Change the background color of the tile
-                      activeColor: Colors.orange,
-                    ),
-                  ],
-                ),
-
-                SizedBox(height: 16),
-
-                Text(
-                  "What is the longest trip you would take?",
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-                Slider(
-                  value: _longestTripDistance,
-                  min: 0,
-                  max: 800,
-                  divisions: 50,
-                  label: "${_longestTripDistance.toStringAsFixed(0)} km",
-                  onChanged: (value) {
-                    setState(() {
-                      _longestTripDistance = value;
-                    });
-                  },
-                  activeColor: Colors.orangeAccent, // Set the active color
-                  inactiveColor: Colors.white54,
-                ),
-                SizedBox(height: 16),
-
-                Text(
-                  "How often do you go on such excursions?",
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-                Column(
-                  children: [
-                    RadioListTile<int>(
-                      title: Text("Frequently", style: TextStyle(color: Colors.white)),
-                      value: 1,
-                      groupValue: _longTripFrequency,
-                      onChanged: (int? value) {
-                        setState(() {
-                          _longTripFrequency = value;
-                        });
-                      },
-                      tileColor: Colors.white, // Change the background color of the tile
-                      activeColor: Colors.orange,
-                    ),
-                    RadioListTile<int>(
-                      title: Text("Once a week", style: TextStyle(color: Colors.white)),
-                      value: 2,
-                      groupValue: _longTripFrequency,
-                      onChanged: (int? value) {
-                        setState(() {
-                          _longTripFrequency = value;
-                        });
-                      },
-                      tileColor: Colors.white, // Change the background color of the tile
-                      activeColor: Colors.orange,
-                    ),
-                    RadioListTile<int>(
-                      title: Text("Once a month", style: TextStyle(color: Colors.white)),
-                      value: 3,
-                      groupValue: _longTripFrequency,
-                      onChanged: (int? value) {
-                        setState(() {
-                          _longTripFrequency = value;
-                        });
-                      },
-                      tileColor: Colors.white, // Change the background color of the tile
-                      activeColor: Colors.orange,
-                    ),
-                    RadioListTile<int>(
-                      title: Text("Rare", style: TextStyle(color: Colors.white)),
-                      value: 4,
-                      groupValue: _longTripFrequency,
-                      onChanged: (int? value) {
-                        setState(() {
-                          _longTripFrequency = value;
-                        });
-                      },
-                      tileColor: Colors.white, // Change the background color of the tile
-                      activeColor: Colors.orange,
-                    ),
-                  ],
-                ),
+                _buildTextField('Nickname', _nicknameController, (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Nickname is required';
+                  }
+                  if (!RegExp(r'^[a-zA-Z0-9]+$').hasMatch(value)) {
+                    return 'Nickname should be alphanumeric';
+                  }
+                  return null;
+                }),
 
                 SizedBox(height: 20),
                 Center(
                   child: ElevatedButton(
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
-                        // Form is valid, handle registration logic
+                        _registerVehicle();
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -374,11 +272,35 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
             dropdownColor: Colors.black,
             style: TextStyle(color: Colors.white),
             items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+            // onChanged: enabled ? onChanged : null,
             onChanged: onChanged,
+            value: _getDropdownValue(label), // Get appropriate value based on label
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please select a $label';
+              }
+              return null;
+            },
+            isExpanded: true,
           ),
         ),
       ],
     );
+  }
+
+  String? _getDropdownValue(String label) {
+    switch (label) {
+      case 'Make':
+        return selectedMake;
+      case 'Model':
+        return selectedModel;
+      case 'Engine':
+        return selectedEngine;
+      case 'Year':
+        return selectedYear;
+      default:
+        return null;
+    }
   }
 
   Widget _buildTextField(String label, TextEditingController controller, String? Function(String?)? validator) {
@@ -391,7 +313,17 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
           controller: controller,
           decoration: _inputDecoration('Enter $label'),
           style: TextStyle(color: Colors.white),
-          validator: validator,
+          validator: label == 'Registration No'
+              ? (value) {
+            if (value == null || value.isEmpty) {
+              return 'Registration number is required';
+            }
+            if (!RegExp(r'^[A-Z]{2,3}\s\d{4}$').hasMatch(value)) {
+              return 'Registration number must be in the format: CAM 6584';
+            }
+            return null;
+          }
+              : validator, // Use the provided validator for other fields
         ),
         SizedBox(height: 10),
       ],
@@ -449,6 +381,50 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
         borderRadius: BorderRadius.circular(5),
       ),
     );
+  }
+
+  Future<void> _registerVehicle() async {
+    if (_formKey.currentState!.validate()) {
+      // Parse odometer and next service mileage
+      double odometer = double.parse(_odometerController.text);
+      double nextService = double.parse(_nextServiceController.text);
+
+      // Validate next service mileage against odometer
+      if (nextService <= odometer) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Next service mileage must be greater than current odometer reading.')),
+        );
+        return; // Stop the registration process
+      }
+      try {
+        await VehicleService().registerVehicle(
+          make: selectedMake!,
+          model: selectedModel!,
+          engineType: selectedEngine!,
+          year: selectedYear!,
+          registrationNumber: _regNumberController.text,
+          odometerReading: double.parse(_odometerController.text),
+          nextServiceReading: double.parse(_nextServiceController.text),
+          licenseExpiryDate: _licenseExpiryDate!,
+          insuranceExpiryDate: _insuranceExpiryDate!,
+          emmissionsExpiryDate: _emmissionsExpiryDate!,
+          preferredBrand: selectedBrand!,
+          nickname: _nicknameController.text,
+        );
+
+        // Show a success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Vehicle registered successfully!')),
+        );
+
+        // navigate to my cars screen after successful registration
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MyCarsPage()));
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to register vehicle: $e')),
+        );
+      }
+    }
   }
 }
 
