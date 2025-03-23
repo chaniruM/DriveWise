@@ -230,7 +230,7 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content:
-                  Text('Failed to update profile: ${responseData['message']}'),
+              Text('Failed to update profile: ${responseData['message']}'),
               backgroundColor: Colors.red,
             ),
           );
@@ -276,32 +276,32 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
                 backgroundColor: Colors.grey[300],
                 child: _profileImageFile != null
                     ? ClipRRect(
-                        borderRadius: BorderRadius.circular(75),
-                        child: Image.file(
-                          _profileImageFile!,
-                          width: 150, // Increased size
-                          height: 150, // Increased size
-                          fit: BoxFit.cover,
-                        ),
-                      )
+                  borderRadius: BorderRadius.circular(75),
+                  child: Image.file(
+                    _profileImageFile!,
+                    width: 150, // Increased size
+                    height: 150, // Increased size
+                    fit: BoxFit.cover,
+                  ),
+                )
                     : _profileImageUrl != null
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(75),
-                            child: CachedNetworkImage(
-                              imageUrl:
-                                  ApiService.getImageUrl(_profileImageUrl!),
-                              placeholder: (context, url) =>
-                                  CircularProgressIndicator(),
-                              errorWidget: (context, url, error) =>
-                                  Icon(Icons.person, size: 50),
-                              width: 150,
-                              // Increased size
-                              height: 150,
-                              // Increased size
-                              fit: BoxFit.cover,
-                            ),
-                          )
-                        : Icon(Icons.person, size: 50, color: Colors.grey[600]),
+                    ? ClipRRect(
+                  borderRadius: BorderRadius.circular(75),
+                  child: CachedNetworkImage(
+                    imageUrl:
+                    ApiService.getImageUrl(_profileImageUrl!),
+                    placeholder: (context, url) =>
+                        CircularProgressIndicator(),
+                    errorWidget: (context, url, error) =>
+                        Icon(Icons.person, size: 50),
+                    width: 150,
+                    // Increased size
+                    height: 150,
+                    // Increased size
+                    fit: BoxFit.cover,
+                  ),
+                )
+                    : Icon(Icons.person, size: 50, color: Colors.grey[600]),
               ),
               if (_isEditing)
                 Positioned(
@@ -399,7 +399,7 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
           backgroundColor: Colors.redAccent,
           padding: const EdgeInsets.symmetric(vertical: 15.0),
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
           minimumSize: const Size(double.infinity, 50),
         ),
         child: const Text(
@@ -413,72 +413,94 @@ class _UserDetailsPageState extends State<UserDetailsPage> {
   @override
   Widget build(BuildContext context) {
     if (!_dataLoaded && _isLoading) {
-      return Center(child: CircularProgressIndicator());
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('User Profile',
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white)),
+          backgroundColor: Color(0xFF030B23),
+          elevation: 5,
+        ),
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildProfileHeader(),
-              const SizedBox(height: 10.0),
-              // Horizontal divider line with black color
-              Container(
-                height: 1.0,
-                width: double.infinity,
-                color: Colors.black45,
-                margin: const EdgeInsets.symmetric(vertical: 16.0),
-              ),
-              // const SizedBox(height: 20.0),
-              TextFormField(
-                controller: _nameController,
-                decoration: _inputDecoration('Name', Icons.person),
-                validator: (value) => value!.isEmpty ? 'Enter your name' : null,
-                enabled: _isEditing,
-              ),
-              const SizedBox(height: 26.0),
-              TextFormField(
-                controller: _emailController,
-                decoration: _inputDecoration('Email', Icons.email),
-                readOnly: true, // Email should not be editable here
-              ),
-              const SizedBox(height: 26.0),
-              TextFormField(
-                controller: _phoneController,
-                decoration: _inputDecoration('Phone Number', Icons.phone),
-                keyboardType: TextInputType.phone,
-                validator: (value) {
-                  if (value!.isEmpty) {
-                    return 'Enter your phone number';
-                  }
-                  // Basic validation for 10-digit US numbers
-                  if (!RegExp(r'^\d{10}$').hasMatch(value)) {
-                    return 'Enter a valid 10-digit phone number';
-                  }
-                  return null;
-                },
-                enabled: _isEditing,
-              ),
-              const SizedBox(height: 26.0),
-              TextFormField(
-                controller: _locationController,
-                decoration: _inputDecoration('Location', Icons.location_on,
-                    required: false),
-                // No validator since location is optional
-                enabled: _isEditing,
-              ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('User Profile',
+            style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white)),
+        backgroundColor: Color(0xFF030B23),
+        elevation: 5,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildProfileHeader(),
+                const SizedBox(height: 10.0),
+                // Horizontal divider line with black color
+                Container(
+                  height: 1.0,
+                  width: double.infinity,
+                  color: Colors.black45,
+                  margin: const EdgeInsets.symmetric(vertical: 16.0),
+                ),
+                // const SizedBox(height: 20.0),
+                TextFormField(
+                  controller: _nameController,
+                  decoration: _inputDecoration('Name', Icons.person),
+                  validator: (value) => value!.isEmpty ? 'Enter your name' : null,
+                  enabled: _isEditing,
+                ),
+                const SizedBox(height: 26.0),
+                TextFormField(
+                  controller: _emailController,
+                  decoration: _inputDecoration('Email', Icons.email),
+                  readOnly: true, // Email should not be editable here
+                ),
+                const SizedBox(height: 26.0),
+                TextFormField(
+                  controller: _phoneController,
+                  decoration: _inputDecoration('Phone Number', Icons.phone),
+                  keyboardType: TextInputType.phone,
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return 'Enter your phone number';
+                    }
+                    // Basic validation for 10-digit US numbers
+                    if (!RegExp(r'^\d{10}$').hasMatch(value)) {
+                      return 'Enter a valid 10-digit phone number';
+                    }
+                    return null;
+                  },
+                  enabled: _isEditing,
+                ),
+                const SizedBox(height: 26.0),
+                TextFormField(
+                  controller: _locationController,
+                  decoration: _inputDecoration('Location', Icons.location_on,
+                      required: false),
+                  // No validator since location is optional
+                  enabled: _isEditing,
+                ),
 
-              // Add action buttons at the bottom
-              Container(
-                width: double.infinity,
-                margin: const EdgeInsets.only(top: 20.0),
-                child: _buildActionButtons(),
-              ),
-            ],
+                // Add action buttons at the bottom
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(top: 20.0),
+                  child: _buildActionButtons(),
+                ),
+              ],
+            ),
           ),
         ),
       ),
