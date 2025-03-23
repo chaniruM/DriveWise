@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:drivewise/pages/MaintenanceOverview.dart';
 import 'package:drivewise/services/vehicle_service.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +7,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:async';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:http/http.dart' as http;
 
 import '../services/notification_service.dart';
 
@@ -22,7 +20,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final FlutterBluePlus flutterBlue = FlutterBluePlus();
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-  double targetDistance = 0.5;
   BluetoothDevice? _selectedDevice;
   BluetoothCharacteristic? _writeCharacteristic;
   BluetoothCharacteristic? _readCharacteristic;
@@ -31,15 +28,12 @@ class _HomePageState extends State<HomePage> {
   double _totalDistance = 0.0;
   double _distanceInKM = 0.0;
   BluetoothAdapterState _bluetoothState = BluetoothAdapterState.unknown;
-  String _status = "Press Start to read distance";
-
   int _currentSlideIndex = 0;
   final PageController _pageController = PageController();
   String _selectedVehicle = 'Please Add a Vehicle';
-  double _mileage = 0; // Starting mileage shown in the image
+  double _mileage = 0; // Starting mileage
   List<Map<String, dynamic>> _vehicles = [];
   List<Map<String, dynamic>> _upcomingEvents = [];
-  List<Map<String, dynamic>> _recentSearches = [];
   bool _notificationSent = false;
 
   @override
@@ -53,10 +47,8 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadData() async {
     try {
-      // Mock data for demonstration, replace with actual DB connection
       await _loadVehicles();
       await _loadUpcomingEvents();
-      await _loadRecentSearches();
     } catch (e) {
       debugPrint('Error loading data: $e');
     }
@@ -67,7 +59,6 @@ class _HomePageState extends State<HomePage> {
       Permission.bluetooth,
       Permission.bluetoothConnect,
       Permission.bluetoothScan,
-      // Permission.location,
       Permission.notification,
     ].request();
 
@@ -94,9 +85,9 @@ class _HomePageState extends State<HomePage> {
         _listDevices(); // Start scanning when Bluetooth is enabled
       } else {
         print("Bluetooth is off");
-        setState(() {
-          _status = "Bluetooth is off. Please enable Bluetooth.";
-        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Bluetooth is off. Please enable Bluetooth.')),
+        );
       }
     });
   }
@@ -104,9 +95,9 @@ class _HomePageState extends State<HomePage> {
   Future<void> _listDevices() async {
 
     if (_bluetoothState != BluetoothAdapterState.on) {
-      setState(() {
-        _status = "Bluetooth is off. Please enable Bluetooth.";
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Bluetooth is off. Please enable Bluetooth.')),
+      );
       return;
     }
 
@@ -135,7 +126,9 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _connectToOBD() async {
     if (_selectedDevice == null) {
-      setState(() => _status = "No device selected");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No device selected.')),
+      );
       return;
     }
 
@@ -156,9 +149,13 @@ class _HomePageState extends State<HomePage> {
         }
       }
 
-      setState(() => _status = "Connected to ${_selectedDevice!.name}");
+      ScaffoldMessenger.of(context).showSnackBar( // Show success SnackBar
+        SnackBar(content: Text("Connected to ${_selectedDevice!.name}")),
+      );
     } catch (e) {
-      setState(() => _status = "Connection failed: $e");
+      ScaffoldMessenger.of(context).showSnackBar( // Show error SnackBar
+        SnackBar(content: Text("Connection failed: $e")),
+      );
     }
   }
 
@@ -250,18 +247,6 @@ class _HomePageState extends State<HomePage> {
       }
     } catch (e) {
       debugPrint('Error loading upcoming events: $e');
-    }
-  }
-
-  Future<void> _loadRecentSearches() async {
-    // mock data
-    if (mounted) {
-      setState(() {
-        _recentSearches = [
-          {'name': 'Engine Oil 5W-30', 'imageUrl': 'assets/engine_oil.png'},
-          {'name': 'Air Filter', 'imageUrl': 'assets/air_filter.png'},
-        ];
-      });
     }
   }
 
@@ -361,9 +346,6 @@ class _HomePageState extends State<HomePage> {
             // Upcoming Events
             _buildUpcomingEvents(),
 
-            // Recently Searched
-            _buildRecentlySearched(),
-
             const SizedBox(height: 80), // Space for bottom nav bar
           ],
         ),
@@ -439,14 +421,14 @@ class _HomePageState extends State<HomePage> {
         Container(
           width: double.infinity,
           height: 300,
-          color: const Color(0xFF1A2238), // Darkened placeholder for image
+          color: const Color(0xFF1A2238),
           child: Align(
             alignment: Alignment.centerRight,
             child: ClipRRect( // Clip the image to prevent overflow
               child: Image.network(
                 imagePath,
                 fit: BoxFit.fill, // Use BoxFit.cover to fill the space
-                alignment: Alignment.center, // center the image
+                alignment: Alignment.center,
                 errorBuilder: (context, error, stackTrace) {
                   // Handle image loading errors
                   return const Center(
@@ -589,8 +571,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
-
-          // Text(_distance, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -676,7 +656,7 @@ class _HomePageState extends State<HomePage> {
     final String eventType = event['event'];
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
         color: const Color(0xFF0A1128),
         borderRadius: BorderRadius.circular(8),
@@ -685,7 +665,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           Container(
             width: 100,
-            height: 85,
+            height: 100,
             decoration: BoxDecoration(
               color: Colors.grey[300],
               borderRadius: const BorderRadius.only(
@@ -755,12 +735,14 @@ class _HomePageState extends State<HomePage> {
           ),
           Container(
             width: 50,
-            height: 85,
+            height: 50,
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: Colors.green[500],
               borderRadius: const BorderRadius.only(
-                topRight: Radius.circular(8),
-                bottomRight: Radius.circular(8),
+                topRight: Radius.circular(100),
+                topLeft: Radius.circular(100),
+                bottomRight: Radius.circular(100),
+                bottomLeft: Radius.circular(100),
               ),
             ),
             child: IconButton(
@@ -818,7 +800,7 @@ class _HomePageState extends State<HomePage> {
           currentDate.day,
         );
 
-        // Call API to update expiry date
+        // update expiry date
         await VehicleService().updateVehicleExpiry(
           vehicleId: vehicle['id'],
           expiryType: expiryType,
@@ -848,71 +830,5 @@ class _HomePageState extends State<HomePage> {
       //   ),
       // );
     }
-  }
-
-  Widget _buildRecentlySearched() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.only(bottom: 10),
-            child: Text(
-              'Recently searched',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.deepOrange,
-              ),
-            ),
-          ),
-          // If we have recent searches, display them in a row
-          if (_recentSearches.isNotEmpty)
-            SizedBox(
-              height: 100,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: _recentSearches.length,
-                itemBuilder: (context, index) {
-                  return Container(
-                    width: 100,
-                    margin: const EdgeInsets.only(right: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Placeholder for image
-                        Container(
-                          height: 50,
-                          width: 50,
-                          color: Colors.grey[300],
-                          child: const Icon(Icons.search),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _recentSearches[index]['name'],
-                          textAlign: TextAlign.center,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            )
-          else
-            Container(
-              height: 100,
-              alignment: Alignment.center,
-              child: const Text('No recent searches yet'),
-            ),
-        ],
-      ),
-    );
   }
 }
