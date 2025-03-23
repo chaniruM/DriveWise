@@ -79,7 +79,7 @@ class _ContactUsPageState extends State<ContactUsPage> with SingleTickerProvider
       appBar: AppBar(
         title: const Text(
           'Contact Us',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.white),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white),
         ),
         elevation: 2,
       ),
