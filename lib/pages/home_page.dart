@@ -266,7 +266,6 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _isMeasuring = true;
         _mileage = baseVehicleMileage;
-        // _distance = "Distance: 0.00 km";
       });
       _connectToOBD(); // Automatically connect to the device when measuring starts
       _startContinuousReading();
@@ -299,8 +298,14 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           selectedVehicle['mileage'] += _distanceInKM;
         });
+        ScaffoldMessenger.of(context).showSnackBar( // Show error SnackBar
+          const SnackBar(content: Text("Updating mileage...")),
+        );
       } catch (e) {
         debugPrint('Error updating mileage: $e');
+        ScaffoldMessenger.of(context).showSnackBar( // Show error SnackBar
+          SnackBar(content: Text("Updating Mileage Failed: $e")),
+        );
       }
     }
   }
@@ -823,12 +828,12 @@ class _HomePageState extends State<HomePage> {
       }
     } else if (eventType.contains('Service')) {
       // Navigate to maintenance page
-      // Navigator.push(
-      //   context,
-      //   MaterialPageRoute(
-      //     builder: (context) => MaintenanceOverview(vehicleId: vehicle['id']),
-      //   ),
-      // );
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MaintenanceOverview(),
+        ),
+      );
     }
   }
 }
