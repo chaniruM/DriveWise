@@ -9,7 +9,7 @@ import 'package:drivewise/widgets/sessionExpiredScreen.dart';
 
 class ApiService {
   // Update baseUrl to include only the domain and port, not the /api/auth part
-  static const String baseUrl = "http://172.20.10.3:5001";
+  static const String baseUrl = "http://192.168.1.16:5000";
 
   // This makes it easier to create URLs for different API endpoints
   static String _apiUrl(String endpoint) => "$baseUrl$endpoint";
@@ -22,7 +22,7 @@ class ApiService {
     // Otherwise, construct the full URL
     return "$baseUrl/$path";
   }
-  // **Save email to SharedPreferences**
+  // *Save email to SharedPreferences*
   static Future<void> saveUserEmail(String email) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_email', email);
@@ -32,9 +32,6 @@ class ApiService {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('user_email');
   }
-
-  static Future<Map<String, dynamic>> register(
-      String username, String email, String password) async {
 
   static Future<void> saveUserId(String userId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -67,7 +64,7 @@ class ApiService {
         return {
           "error": true,
           "message":
-              jsonDecode(response.body)["message"] ?? "Failed to register"
+          jsonDecode(response.body)["message"] ?? "Failed to register"
         };
       }
     } catch (e) {
@@ -248,7 +245,7 @@ class ApiService {
         return {
           'success': false,
           'message':
-              jsonDecode(response.body)['message'] ?? 'Failed to upload image',
+          jsonDecode(response.body)['message'] ?? 'Failed to upload image',
         };
       }
     } catch (e) {
