@@ -9,7 +9,7 @@ class VehicleService {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('user_id');
   }
-  final String baseUrl = 'http://172.20.10.3:5001/api';
+  final String baseUrl = 'http://192.168.1.16:5000/api';
 
   // Fetch user's vehicles
   Future<Map<String, dynamic>> fetchUserVehicles() async {
@@ -242,6 +242,85 @@ class VehicleService {
     } catch (e) {
       print('Error in updateVehicleExpiry: $e');
       rethrow;
+    }
+  }
+
+  // Updated fetchVehicleSpecs method with proper image URL handling
+  Future<Map<String, dynamic>> fetchVehicleSpecs(
+      String make, String model, String year, String engine) async {
+    try {
+      // Debug the parameters
+      print('Fetching specs for: $make $model $year $engine');
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/vehicleSpecs/$make/$model/$year/$engine'),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+
+        // Debug the response
+        print('API Response: $data');
+
+        // Check if the image URL exists and is valid
+        if (!data.containsKey('imageUrl') || data['imageUrl'] == null || data['imageUrl'].toString().isEmpty) {
+          // If no image is provided, try to fetch a generic vehicle image
+          try {
+            // Attempt to get a generic image for the make and model
+            final String encodedMake = Uri.encodeComponent(make);
+            final String encodedModel = Uri.encodeComponent(model);
+
+            final fallbackResponse = await http.get(
+              Uri.parse('$baseUrl/vehicleImage/$encodedMake/$encodedModel'),
+            );
+
+            if (fallbackResponse.statusCode == 200) {
+              final Map<String, dynamic> fallbackData = json.decode(fallbackResponse.body);
+              if (fallbackData.containsKey('imageUrl') &&
+                  fallbackData['imageUrl'] != null &&
+                  fallbackData['imageUrl'].toString().isNotEmpty) {
+                // Use the fallback image
+                data['imageUrl'] = fallbackData['imageUrl'];
+                print('Using fallback image: ${fallbackData['imageUrl']}');
+              }
+            }
+          } catch (imageError) {
+            print('Error fetching fallback image: $imageError');
+            // Continue without an image if fallback fails
+          }
+        }
+
+        return data;
+      } else {
+        throw Exception(
+            'Failed to load vehicle specifications: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error in fetchVehicleSpecs: $e');
+      rethrow;
+    }
+  }
+
+  // Add a new method to directly fetch a vehicle image
+  Future<String?> fetchVehicleImage(String make, String model) async {
+    try {
+      final String encodedMake = Uri.encodeComponent(make);
+      final String encodedModel = Uri.encodeComponent(model);
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/vehicleImage/$encodedMake/$encodedModel'),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        return data['imageUrl'];
+      } else {
+        print('Failed to fetch vehicle image: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error in fetchVehicleImage: $e');
+      return null; // Return null instead of rethrowing to handle gracefully
     }
   }
 }
