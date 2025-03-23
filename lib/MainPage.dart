@@ -7,13 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:drivewise/services/token_service.dart';
 import 'pages/my_cars.dart';
 import 'pages/user_details_page.dart';
-import 'pages/read_speed.dart';
 import 'pages/home_page.dart';
-import 'pages/settings_screen.dart';
 import 'pages/error_codes.dart';
 import 'package:drivewise/widgets/sessionExpiredScreen.dart';
 import 'package:drivewise/pages/contact_us.dart';
 import 'package:drivewise/widgets/logout_dialogs.dart';
+import 'package:drivewise/pages/settings_screen.dart';
 
 class MainPage extends StatefulWidget {
   @override
@@ -95,7 +94,12 @@ class _MainPageState extends State<MainPage> {
         ),
         actions: [
           GestureDetector(
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SettingsScreen()),
+              );
+            },
             child: CircleAvatar(
               child: Icon(Icons.settings, color: Colors.white),
             ),
@@ -134,8 +138,10 @@ class _MainPageState extends State<MainPage> {
               leading: const Icon(Icons.history, color: Colors.orange),
               title: const Text('Trouble Codes'),
               onTap: () {
-                _onPageSelected(4);
-                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => TroubleCodePage()),
+                );
               },
             ),
             ListTile(
