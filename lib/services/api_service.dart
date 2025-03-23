@@ -9,7 +9,7 @@ import 'package:http_parser/http_parser.dart';
 
 class ApiService {
   // Update baseUrl to include only the domain and port, not the /api/auth part
-  static const String baseUrl = "http://192.168.154.131:5000";
+  static const String baseUrl = "http://172.20.10.3:5001";
 
   // This makes it easier to create URLs for different API endpoints
   static String _apiUrl(String endpoint) => "$baseUrl$endpoint";
@@ -23,14 +23,6 @@ class ApiService {
     // Otherwise, construct the full URL
     return "$baseUrl/$path";
   }
-
-
-  // Change to your actual backend IP address or domain name
-  //static const String baseUrl = "http://10.0.2.2:5001/api/auth";
-
-
-  static const String baseUrl = "http://192.168.154.131:5000/api/auth";
-  // static const String baseUrl = "http://192.168.1.16:5000/api/auth";// Update for production
   // **Save email to SharedPreferences**
   static Future<void> saveUserEmail(String email) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -40,6 +32,21 @@ class ApiService {
   static Future<String?> getUserEmail() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('user_email');
+  }
+
+  static Future<void> saveUserId(String userId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_id', userId);
+  }
+
+  static Future<String?> getUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('user_id');
+  }
+
+  static Future<void> clearUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('user_id');
   }
 
   static Future<Map<String, dynamic>> register(String username, String email, String password) async {
@@ -73,6 +80,9 @@ class ApiService {
         if (responseData.containsKey("token")) {
           await TokenService.saveToken(responseData["token"]);
           await saveUserEmail(email);
+          if (responseData.containsKey("user") && responseData["user"].containsKey("id")) {
+            await saveUserId(responseData["user"]["id"]);
+          }
         }
         return responseData;
       } else {
