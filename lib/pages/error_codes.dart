@@ -299,7 +299,12 @@ class _TroubleCodePageState extends State<TroubleCodePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("DRIVEWISE"),
+        title: const Text("Trouble Codes",
+          style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 26,
+          color: Colors.white,
+        ),),
         actions: [
           IconButton(
             icon: const Icon(LucideIcons.settings),

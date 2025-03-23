@@ -1,16 +1,4 @@
 import 'package:flutter/material.dart';
-import 'quick_lookup_screen.dart';
-
-void main() {
-  runApp(MaterialApp(
-    home: VehicleSpecScreen(
-      make: 'Toyota',
-      model: 'Corolla',
-      year: '2020',
-      engine: '1.8L 4-Cylinder',
-    ),
-  ));
-}
 
 class VehicleSpecScreen extends StatelessWidget {
   final String make;
@@ -19,11 +7,12 @@ class VehicleSpecScreen extends StatelessWidget {
   final String engine;
 
   const VehicleSpecScreen({
+    Key? key,
     required this.make,
     required this.model,
     required this.year,
     required this.engine,
-  });
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +21,7 @@ class VehicleSpecScreen extends StatelessWidget {
         title: Text(
           'DriveWise',
           style: TextStyle(
+            color: Colors.white,
             fontWeight: FontWeight.bold,
             fontSize: 26,
             fontStyle: FontStyle.italic,
@@ -39,15 +29,8 @@ class VehicleSpecScreen extends StatelessWidget {
         ),
         backgroundColor: Color(0xFF030B23),
         iconTheme: const IconThemeData(color: Colors.white),
-        // Ensures the back button is visible
-        titleTextStyle: const TextStyle(color: Colors.white, fontSize: 18),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context); // Goes back to the previous screen
-          },
-        ),
       ),
+      backgroundColor: const Color(0xFF0D1128),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -55,19 +38,25 @@ class VehicleSpecScreen extends StatelessWidget {
           children: [
             const Text(
               'Quick Lookup/Vehicle Specification',
-              style: TextStyle(fontSize: 15, color: Colors.black),
+              style: TextStyle(fontSize: 15, color: Colors.white),
             ),
+            const SizedBox(height: 10),
             Center(
               child: Text(
                 '$make $model $year',
-                style:
-                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
             ),
+            const SizedBox(height: 10),
             Image.asset(
-              'assets/images/car.png', // Ensure image is correctly placed
+              'assets/images/car.png',
               height: 150,
             ),
+            const SizedBox(height: 10),
             SpecItem(title: 'Engine', value: engine),
             SpecItem(title: 'Engine Oil', value: '10W30'),
             SpecItem(title: 'Transmission Oil', value: 'Toyota WS AT Fluid'),
@@ -87,11 +76,13 @@ class SpecItem extends StatelessWidget {
   final String title;
   final String value;
 
-  const SpecItem({required this.title, required this.value});
+  const SpecItem({Key? key, required this.title, required this.value})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Card(
+      margin: const EdgeInsets.symmetric(vertical: 5),
       child: ListTile(
         title: Text(title),
         subtitle: Text(value),
