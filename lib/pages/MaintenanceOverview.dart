@@ -255,51 +255,34 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
                       if (replacementData[key]!.isEmpty)
                         const Text('No products available', style: TextStyle(fontSize: 14))
                       else
-                        DropdownButton<String>(
-                          hint: const Text('Select product used', style: TextStyle(fontSize: 14)),
-                          value: selectedProducts[key],
-                          items: replacementData[key]!.map((product) {
-                            return DropdownMenuItem<String>(
-                              value: product['name'], // Use the product name as the value
-                              child: Text(product['name'], style: const TextStyle(fontSize: 14)),
-                            );
-                          }).toList(),
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              selectedProducts[key] = newValue;
-                              print(selectedProducts);
-                            });
-                          },
-                          style: const TextStyle(color: Colors.black),
-                          dropdownColor: Colors.white,
-                          elevation: 4,
+                        Expanded( // Use Expanded here
+                          child: DropdownButton<String>(
+                            isExpanded: true, // Add isExpanded: true
+                            hint: const Text('Select product used', style: TextStyle(fontSize: 14)),
+                            value: selectedProducts[key],
+                            items: replacementData[key]!.map((product) {
+                              return DropdownMenuItem<String>(
+                                value: product['name'],
+                                child: Expanded( // Use Expanded here
+                                  child: Text(
+                                    product['name'],
+                                    style: const TextStyle(fontSize: 14),
+                                    overflow: TextOverflow.ellipsis, // Truncate long text
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                selectedProducts[key] = newValue;
+                                print(selectedProducts);
+                              });
+                            },
+                            style: const TextStyle(color: Colors.black),
+                            dropdownColor: Colors.white,
+                            elevation: 4,
+                          ),
                         ),
-                        // DropdownButton<String>(
-                        //   hint: const Text('Select product used', style: TextStyle(fontSize: 14)),
-                        //   value: selectedProducts[key],
-                        //   items: replacementData[key]!.map((product) {
-                        //     return DropdownMenuItem<String>(
-                        //       value: product['name'], // Use the product ID as the value
-                        //       child: Expanded( // Wrap Text with Expanded
-                        //         child: Text(
-                        //           product['name'],
-                        //           style: const TextStyle(fontSize: 14),
-                        //           overflow: TextOverflow.ellipsis, // Truncate long text
-                        //         ),
-                        //       ),
-                        //       // child: Text(product['name'], style: const TextStyle(fontSize: 14)), // Use only the name
-                        //
-                        //     );
-                        //   }).toList(),
-                        //   onChanged: (String? newValue) {
-                        //     setState(() {
-                        //       selectedProducts[key] = newValue;
-                        //     });
-                        //   },
-                        //   style: const TextStyle(color: Colors.black),
-                        //   dropdownColor: Colors.white,
-                        //   elevation: 4,
-                        // ),
                     ],
                   ),
                 ),
