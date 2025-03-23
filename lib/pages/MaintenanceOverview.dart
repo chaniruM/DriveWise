@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/vehicle_service.dart';
+import 'maintenance_history_screen.dart';
 
 class MaintenanceOverview extends StatefulWidget {
   @override
@@ -18,6 +19,29 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
     'Oil Filter': false,
     'Brake Fluid': false,
   };
+//   List<Map<String, dynamic>> maintenanceRecords = []; // List to store maintenance records
+//
+//   @override
+//   void initState() {
+//     super.initState();
+//     fetchUserVehicles();
+//     _loadVehicles();
+//     _fetchReplacementData();
+//     _loadMaintenanceRecords(); // Load maintenance records when the screen initializes
+//   }
+//
+//   Load maintenance records
+//   Future<void> _loadMaintenanceRecords() async {
+//     try {
+//       final records = await vehicleService.fetchMaintenanceRecords(_vehicleReference!);
+//       setState(() {
+//         maintenanceRecords = records;
+//       });
+//     } catch (e) {
+//       debugPrint('Error loading maintenance records: $e');
+//     }
+//   }
+// }
 
   // Store fetched data for each replacement type
   final Map<String, List<Map<String, dynamic>>> replacementData = {
@@ -282,45 +306,66 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
               );
             }).toList(),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                print(selectedProducts);
-                print(selectedProducts['Engine Oil']);
-                print(selectedProducts['Transmission Oil']);
-                print(selectedProducts['Oil Filter']);
-                print(selectedProducts['Brake Fluid']);
-                print(_vehicleReference);
-                print(selectedDate);
-                print(odometerController.text);
-                if (_vehicleReference == null || selectedDate == null || odometerController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please fill all fields')),
-                  );
-                  return;
-                }
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () async {
+                    print(selectedProducts);
+                    print(selectedProducts['Engine Oil']);
+                    print(selectedProducts['Transmission Oil']);
+                    print(selectedProducts['Oil Filter']);
+                    print(selectedProducts['Brake Fluid']);
+                    print(_vehicleReference);
+                    print(selectedDate);
+                    print(odometerController.text);
+                    if (_vehicleReference == null || selectedDate == null || odometerController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please fill all fields')),
+                      );
+                      return;
+                    }
 
-                try {
-                  await VehicleService().saveMaintenanceRecord(
-                    vehicleId: _vehicleReference!,
-                    date: selectedDate!,
-                    odometer: double.parse(odometerController.text),
-                    engineOil: selectedProducts['Engine Oil'] ?? 'N/A',
-                    transmissionOil: selectedProducts['Transmission Oil'] ?? 'N/A',
-                    airFilter: selectedProducts['Oil Filter'] ?? 'N/A',
-                    brakeFluid: selectedProducts['Brake Fluid'] ?? 'N/A',
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Maintenance record saved successfully')),
-                  );
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed to save maintenance record: $e')),
-                  );
-                }
-              },
-              child: const Text('Save Maintenance Record'),
+                    try {
+                      await VehicleService().saveMaintenanceRecord(
+                        vehicleId: _vehicleReference!,
+                        date: selectedDate!,
+                        odometer: double.parse(odometerController.text),
+                        engineOil: selectedProducts['Engine Oil'] ?? 'N/A',
+                        transmissionOil: selectedProducts['Transmission Oil'] ?? 'N/A',
+                        airFilter: selectedProducts['Oil Filter'] ?? 'N/A',
+                        brakeFluid: selectedProducts['Brake Fluid'] ?? 'N/A',
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Maintenance record saved successfully')),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to save maintenance record: $e')),
+                      );
+                    }
+                  },
+                  child: const Text('Save Maintenance Record'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (_vehicleReference == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please select a vehicle')),
+                      );
+                      return;
+                    }
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MaintenanceHistoryScreen(),
+                      ),
+                    );
+                  },
+                  child: const Text('Check History'),
+                ),
+              ],
             ),
-
           ],
         ),
       ),

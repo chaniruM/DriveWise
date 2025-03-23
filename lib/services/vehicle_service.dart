@@ -280,5 +280,48 @@ class VehicleService {
       rethrow;
     }
   }
+  // Future<List<Map<String, dynamic>>> fetchMaintenanceHistory(String vehicleId) async {
+  //   try {
+  //     final response = await http.get(Uri.parse('$baseUrl/maintenanceHistory/$vehicleId'));
+  //     if (response.statusCode == 200) {
+  //       final List<dynamic> data = jsonDecode(response.body);
+  //       return List<Map<String, dynamic>>.from(data);
+  //     } else {
+  //       throw Exception('Failed to load maintenance history: ${response.statusCode}');
+  //     }
+  //   } catch (e) {
+  //     print('Error in fetchMaintenanceHistory: $e');
+  //     rethrow;
+  //   }
+  // }
+
+  Future<List<Map<String, dynamic>>> fetchMaintenanceHistory() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/maintenanceHistory')); // Removed vehicleId
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return List<Map<String, dynamic>>.from(data);
+      } else {
+        throw Exception('Failed to load maintenance history: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error in fetchMaintenanceHistory: $e');
+      rethrow;
+    }
+  }
+  // Future<List<Map<String, dynamic>>> fetchMaintenanceHistory(String vehicleId) async {
+  //   try {
+  //     final response = await http.get(Uri.parse('$baseUrl/maintenanceHistory/$vehicleId'));
+  //     if (response.statusCode == 200) {
+  //       final List<dynamic> data = jsonDecode(response.body);
+  //       return List<Map<String, dynamic>>.from(data);
+  //     } else {
+  //       throw Exception('Failed to load maintenance history: ${response.statusCode}');
+  //     }
+  //   } catch (e) {
+  //     print('Error in fetchMaintenanceHistory: $e');
+  //     rethrow;
+  //   }
+  // }
 
 }
