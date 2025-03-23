@@ -13,7 +13,6 @@ class ApiService {
 
   // This makes it easier to create URLs for different API endpoints
   static String _apiUrl(String endpoint) => "$baseUrl$endpoint";
-
   // Helper method to get full image URL
   static String getImageUrl(String path) {
     // If the path already contains the full URL, return it as is
