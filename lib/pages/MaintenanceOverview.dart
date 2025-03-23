@@ -54,23 +54,23 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
   // Fetch data for all replacement types
   Future<void> _fetchReplacementData() async {
     try {
-      final engineOils = await vehicleService.fetchEngineOils();
-      final transmissionOils = await vehicleService.fetchTransmissionOils();
-      final oilFilters = await vehicleService.fetchOilFilters();
-      final brakeFluids = await vehicleService.fetchBrakeFluids();
-
-      // Debug prints
-      print('Engine Oils: $engineOils');
-      print('Transmission Oils: $transmissionOils');
-      print('Oil Filters: $oilFilters');
-      print('Brake Fluids: $brakeFluids');
-
-      setState(() {
-        replacementData['Engine Oil'] = engineOils;
-        replacementData['Transmission Oil'] = transmissionOils;
-        replacementData['Oil Filter'] = oilFilters;
-        replacementData['Brake Fluid'] = brakeFluids;
-      });
+      // final engineOils = await vehicleService.fetchEngineOils();
+      // final transmissionOils = await vehicleService.fetchTransmissionOils();
+      // final oilFilters = await vehicleService.fetchOilFilters();
+      // final brakeFluids = await vehicleService.fetchBrakeFluids();
+      //
+      // // Debug prints
+      // print('Engine Oils: $engineOils');
+      // print('Transmission Oils: $transmissionOils');
+      // print('Oil Filters: $oilFilters');
+      // print('Brake Fluids: $brakeFluids');
+      //
+      // setState(() {
+      //   replacementData['Engine Oil'] = engineOils;
+      //   replacementData['Transmission Oil'] = transmissionOils;
+      //   replacementData['Oil Filter'] = oilFilters;
+      //   replacementData['Brake Fluid'] = brakeFluids;
+      // });
     } catch (e) {
       debugPrint('Error fetching replacement data: $e');
     }
@@ -78,7 +78,7 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
 
   Future<void> _loadVehicles() async {
     try {
-      final data = await vehicleService.fetchUserVehicles();
+      final data = await VehicleService().fetchUserVehicles();
       if (mounted) {
         setState(() {
           _vehicles = VehicleService().extractVehicles(data);
@@ -104,9 +104,9 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
 
   Future<void> fetchUserVehicles() async {
     try {
-      final data = await vehicleService.fetchUserVehicles();
+      final data = await VehicleService().fetchUserVehicles();
       setState(() {
-        _vehicles = vehicleService.extractVehicles(data);
+        _vehicles = VehicleService().extractVehicles(data);
       });
     } catch (e) {
       print('Error fetching user vehicles: $e');
@@ -167,7 +167,7 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
               children: [
                 const Text('Date:',
                     style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 Expanded(
                   child: InkWell(
                     onTap: () => _selectDate(context),
@@ -199,7 +199,7 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
               children: [
                 const Text('Odometer:',
                     style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 Expanded(
                   child: TextField(
                     controller: odometerController,
@@ -234,7 +234,7 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
                 ),
                 child: Padding(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -304,17 +304,17 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
                 }
 
                 try {
-                  await VehicleService().saveMaintenanceRecord(
-                    vehicleId: _vehicleReference!,
-                    date: selectedDate!,
-                    odometer: double.parse(odometerController.text),
-                    engineOil: selectedProducts['Engine Oil'] ?? 'N/A',
-                    transmissionOil: selectedProducts['Transmission Oil'] ?? 'N/A',
-                    airFilter: selectedProducts['Oil Filter'] ?? 'N/A',
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Maintenance record saved successfully')),
-                  );
+                  // await VehicleService().saveMaintenanceRecord(
+                  //   vehicleId: _vehicleReference!,
+                  //   date: selectedDate!,
+                  //   odometer: double.parse(odometerController.text),
+                  //   engineOil: selectedProducts['Engine Oil'] ?? 'N/A',
+                  //   transmissionOil: selectedProducts['Transmission Oil'] ?? 'N/A',
+                  //   airFilter: selectedProducts['Oil Filter'] ?? 'N/A',
+                  // );
+                  // ScaffoldMessenger.of(context).showSnackBar(
+                  //   const SnackBar(content: Text('Maintenance record saved successfully')),
+                  // );
                 } catch (e) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Failed to save maintenance record: $e')),
