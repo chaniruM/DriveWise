@@ -9,11 +9,10 @@ import 'package:drivewise/widgets/sessionExpiredScreen.dart';
 
 class ApiService {
   // Update baseUrl to include only the domain and port, not the /api/auth part
-  static const String baseUrl = "http://192.168.154.131:5000";
+  static const String baseUrl = "http://172.20.10.3:5001";
 
   // This makes it easier to create URLs for different API endpoints
   static String _apiUrl(String endpoint) => "$baseUrl$endpoint";
-
   // Helper method to get full image URL
   static String getImageUrl(String path) {
     // If the path already contains the full URL, return it as is
@@ -23,7 +22,6 @@ class ApiService {
     // Otherwise, construct the full URL
     return "$baseUrl/$path";
   }
-
   // **Save email to SharedPreferences**
   static Future<void> saveUserEmail(String email) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -37,6 +35,24 @@ class ApiService {
 
   static Future<Map<String, dynamic>> register(
       String username, String email, String password) async {
+
+  static Future<void> saveUserId(String userId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_id', userId);
+  }
+
+  static Future<String?> getUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('user_id');
+  }
+
+  static Future<void> clearUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('user_id');
+  }
+
+  static Future<Map<String, dynamic>> register(String username, String email, String password) async {
+
     try {
       final response = await http.post(
         Uri.parse(_apiUrl("/api/auth/register")),
@@ -73,6 +89,9 @@ class ApiService {
         if (responseData.containsKey("token")) {
           await TokenService.saveToken(responseData["token"]);
           await saveUserEmail(email);
+          if (responseData.containsKey("user") && responseData["user"].containsKey("id")) {
+            await saveUserId(responseData["user"]["id"]);
+          }
         }
         return responseData;
       } else {

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:drivewise/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -23,6 +24,7 @@ class TokenService {
 
   static Future<void> logout(BuildContext context) async {
     await clearToken(); // Remove token and user email
+    await ApiService.clearUserId();
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => LoginScreen()),
@@ -64,7 +66,7 @@ class TokenService {
     if (token == null) return;
 
     final response = await http.post(
-      Uri.parse("http://192.168.154.131:5000/api/auth/refresh"),
+      Uri.parse("http://172.20.10.3:5001/api/auth/refresh"),
       headers: {"Authorization": "Bearer $token"},
     );
 
