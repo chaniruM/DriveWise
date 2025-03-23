@@ -88,10 +88,19 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
     }
   }
 
+  // void _onVehicleChanged(String? newValue) {
+  //   if (newValue != null) {
+  //     setState(() {
+  //       _selectedVehicle = newValue;
+  //     });
+  //   }
+  // }
   void _onVehicleChanged(String? newValue) {
     if (newValue != null) {
+      final selectedVehicle = _vehicles.firstWhere((vehicle) => vehicle['name'] == newValue);
       setState(() {
         _selectedVehicle = newValue;
+        _vehicleReference = selectedVehicle['vehicleRef']; // Update vehicleRef
       });
     }
   }
@@ -234,6 +243,7 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
                           onChanged: (String? newValue) {
                             setState(() {
                               selectedProducts[key] = newValue;
+                              print(selectedProducts);
                             });
                           },
                           style: const TextStyle(color: Colors.black),
@@ -274,6 +284,14 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {
+                print(selectedProducts);
+                print(selectedProducts['Engine Oil']);
+                print(selectedProducts['Transmission Oil']);
+                print(selectedProducts['Oil Filter']);
+                print(selectedProducts['Brake Fluid']);
+                print(_vehicleReference);
+                print(selectedDate);
+                print(odometerController.text);
                 if (_vehicleReference == null || selectedDate == null || odometerController.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Please fill all fields')),
@@ -289,6 +307,7 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
                     engineOil: selectedProducts['Engine Oil'] ?? 'N/A',
                     transmissionOil: selectedProducts['Transmission Oil'] ?? 'N/A',
                     airFilter: selectedProducts['Oil Filter'] ?? 'N/A',
+                    brakeFluid: selectedProducts['Brake Fluid'] ?? 'N/A',
                   );
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Maintenance record saved successfully')),
@@ -301,6 +320,7 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
               },
               child: const Text('Save Maintenance Record'),
             ),
+
           ],
         ),
       ),

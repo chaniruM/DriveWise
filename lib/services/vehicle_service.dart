@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class VehicleService {
-  final String userId = '67df1f78325c1f2e4279a7be';
+  final String userId = '67dfe1b4b61717925db0a7e2';
   final String baseUrl = 'http://192.168.8.100:5001/api';
 
   // Fetch user's vehicles
@@ -197,6 +197,7 @@ class VehicleService {
     required String engineOil,
     required String transmissionOil,
     required String airFilter,
+    required String brakeFluid,
   }) async {
     final response = await http.post(
       Uri.parse('$baseUrl/saveMaintenanceRecord'),
@@ -210,6 +211,7 @@ class VehicleService {
         'engineOil': engineOil,
         'transmissionOil': transmissionOil,
         'airFilter': airFilter,
+        'brakeFluid': brakeFluid,
       }),
     );
 
@@ -278,4 +280,5 @@ class VehicleService {
       rethrow;
     }
   }
+
 }
