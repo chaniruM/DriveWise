@@ -1,10 +1,6 @@
-//register_vehicle_page.dart
-
 import 'package:drivewise/pages/my_cars.dart';
 import 'package:drivewise/services/vehicle_service.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class RegisterVehiclePage extends StatefulWidget {
   @override
@@ -18,6 +14,7 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
   final TextEditingController _nicknameController = TextEditingController();
   DateTime? _licenseExpiryDate;
   DateTime? _insuranceExpiryDate;
+  DateTime? _emmissionsExpiryDate;
 
   // Service Information Fields
   TextEditingController _odometerController = TextEditingController();
@@ -89,12 +86,12 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Register New Vehicle'),
+        title: const Text('Register New Vehicle'),
         foregroundColor: Colors.white,
       ),
       body: Container(
-        color: Color(0xFF030B23),
-        padding: EdgeInsets.all(16),
+        color: const Color(0xFF030B23),
+        padding: const EdgeInsets.all(16),
         child: SingleChildScrollView(
           child: Form(
             key: _formKey,
@@ -102,7 +99,7 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Generic Information Section
-                Text(
+                const Text(
                   'Generic Information',
                   style: TextStyle(
                     color: Colors.orangeAccent,
@@ -130,9 +127,8 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
                       setState(() => selectedModel = val);
                       if (val != null && selectedMake != null) _loadEngines(selectedMake!, val);
                     },
-                    // selectedMake != null
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
 
                 // Engine Dropdown
                 _buildDropdownRow(
@@ -145,7 +141,7 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
                       }
                     },
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
 
                 // Year Dropdown
                 _buildDropdownRow(
@@ -155,7 +151,7 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
                 ),
 
 
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 _buildTextField('Registration No', _regNumberController, (value) {
                   if (value == null || value.isEmpty) {
                     return 'Registration number is required';
@@ -167,15 +163,15 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
                 }),
 
                 // Service Information Section
-                SizedBox(height: 20),
-                Text(
+                const SizedBox(height: 20),
+                const Text(
                   "Service Information",
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.orangeAccent),
                 ),
                 SizedBox(height: 10),
 
                 // Odometer
-                _buildTextField('Odometer', _odometerController, (value) {
+                _buildTextField('Current Odometer Reading', _odometerController, (value) {
                   if (value == null || value.isEmpty) {
                     return 'Odometer is required';
                   }
@@ -188,7 +184,7 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
                 SizedBox(height: 20),
 
                 // Next Service
-                _buildTextField('Next Service', _nextServiceController, (value) {
+                _buildTextField('Next Service Mileage', _nextServiceController, (value) {
                   if (value == null || value.isEmpty) {
                     return 'Next service date is required';
                   }
@@ -208,6 +204,16 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
                 }),
 
                 SizedBox(height: 16),
+
+                // Emissions Test Expiry Date Picker
+                _buildDatePicker("Emissions Test Expiry Date", _emmissionsExpiryDate, (date) {
+                  setState(() {
+                    _emmissionsExpiryDate = date;
+                  });
+                }),
+
+                SizedBox(height: 16),
+
                 // Insurance Renewal Date Picker
                 _buildDatePicker("Insurance Renewal Date", _insuranceExpiryDate, (date) {
                   setState(() {
@@ -218,7 +224,7 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
                 SizedBox(height: 20),
 
                 _buildDropdownRow('Brand', ['Toyota', 'Totachi', 'LukOil', 'Caltex', 'Valvoline'], (val) => setState(() => selectedBrand = val)),
-                SizedBox(height: 16), // Add space between dropdowns
+                SizedBox(height: 16),
 
                 _buildTextField('Nickname', _nicknameController, (value) {
                   if (value == null || value.isEmpty) {
@@ -275,7 +281,7 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
               }
               return null;
             },
-            // onChanged: onChanged,
+            isExpanded: true,
           ),
         ),
       ],
@@ -307,7 +313,17 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
           controller: controller,
           decoration: _inputDecoration('Enter $label'),
           style: TextStyle(color: Colors.white),
-          validator: validator,
+          validator: label == 'Registration No'
+              ? (value) {
+            if (value == null || value.isEmpty) {
+              return 'Registration number is required';
+            }
+            if (!RegExp(r'^[A-Z]{2,3}\s\d{4}$').hasMatch(value)) {
+              return 'Registration number must be in the format: CAM 6584';
+            }
+            return null;
+          }
+              : validator, // Use the provided validator for other fields
         ),
         SizedBox(height: 10),
       ],
@@ -369,9 +385,19 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
 
   Future<void> _registerVehicle() async {
     if (_formKey.currentState!.validate()) {
+      // Parse odometer and next service mileage
+      double odometer = double.parse(_odometerController.text);
+      double nextService = double.parse(_nextServiceController.text);
+
+      // Validate next service mileage against odometer
+      if (nextService <= odometer) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Next service mileage must be greater than current odometer reading.')),
+        );
+        return; // Stop the registration process
+      }
       try {
         await VehicleService().registerVehicle(
-          // userId: '67dadbe2affdc8cfdc59b1c8', // Replace with the actual user ID
           make: selectedMake!,
           model: selectedModel!,
           engineType: selectedEngine!,
@@ -381,20 +407,19 @@ class _RegisterVehicleScreenState extends State<RegisterVehiclePage> {
           nextServiceReading: double.parse(_nextServiceController.text),
           licenseExpiryDate: _licenseExpiryDate!,
           insuranceExpiryDate: _insuranceExpiryDate!,
-          emmissionsExpiryDate: _licenseExpiryDate!,
+          emmissionsExpiryDate: _emmissionsExpiryDate!,
           preferredBrand: selectedBrand!,
           nickname: _nicknameController.text,
         );
 
-        // Show a success message or navigate to another screen
+        // Show a success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Vehicle registered successfully!')),
         );
 
-        // Optionally, navigate to another screen after successful registration
+        // navigate to my cars screen after successful registration
         Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MyCarsPage()));
       } catch (e) {
-        // Show an error message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to register vehicle: $e')),
         );

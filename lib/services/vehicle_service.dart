@@ -1,13 +1,23 @@
 // vehicle_service.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class VehicleService {
-  final String userId = '67dadbe2affdc8cfdc59b1c8';
+  // Method to get userId from SharedPreferences
+  Future<String?> getUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('user_id');
+  }
   final String baseUrl = 'http://172.20.10.3:5001/api';
 
   // Fetch user's vehicles
   Future<Map<String, dynamic>> fetchUserVehicles() async {
+    final userId = await getUserId();
+    if (userId == null) {
+      throw Exception('User ID not found');
+    }
+    print(userId);
     try {
       final response = await http.get(Uri.parse('$baseUrl/vehicles/$userId'));
       if (response.statusCode == 200) {
@@ -53,6 +63,10 @@ class VehicleService {
     required String vehicleId,
     required double mileage,
   }) async {
+    final userId = await getUserId();
+    if (userId == null) {
+      throw Exception('User ID not found');
+    }
     // Debug prints
     print("Updating mileage for vehicle ID: $vehicleId");
     print("New mileage: $mileage");
@@ -137,6 +151,10 @@ class VehicleService {
     required String preferredBrand,
     required String nickname,
   }) async {
+    final userId = await getUserId();
+    if (userId == null) {
+      throw Exception('User ID not found');
+    }
     final response = await http.post(
       Uri.parse('$baseUrl/addVehicle'),
       headers: <String, String>{
@@ -169,6 +187,10 @@ class VehicleService {
   Future<void> removeVehicle({
     required String vehicleId,
   }) async {
+    final userId = await getUserId();
+    if (userId == null) {
+      throw Exception('User ID not found');
+    }
     try {
       final response = await http.delete(
         Uri.parse('$baseUrl/removeUserVehicle'),
@@ -186,6 +208,39 @@ class VehicleService {
       }
     } catch (e) {
       print('Error in removeVehicle: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> updateVehicleExpiry({
+    required String vehicleId,
+    required String expiryType,
+    required DateTime newDate,
+  }) async {
+    final userId = await getUserId();
+    if (userId == null) {
+      throw Exception('User ID not found');
+    }
+    try {
+      print(vehicleId);
+      print('him: $userId');
+      final response = await http.put(
+        Uri.parse('$baseUrl/vehicles/expiry/$vehicleId'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode({
+          'expiryType': expiryType,
+          'newDate': newDate.toIso8601String(),
+          'userID': userId,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to update expiry date: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error in updateVehicleExpiry: $e');
       rethrow;
     }
   }
