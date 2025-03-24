@@ -1,13 +1,23 @@
 // vehicle_service.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class VehicleService {
-  final String userId = '67dfe1b4b61717925db0a7e2';
-  final String baseUrl = 'http://192.168.8.100:5001/api';
+  // Method to get userId from SharedPreferences
+  Future<String?> getUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('user_id');
+  }
+  final String baseUrl = 'http://192.168.1.16:5000/api';
 
   // Fetch user's vehicles
   Future<Map<String, dynamic>> fetchUserVehicles() async {
+    final userId = await getUserId();
+    if (userId == null) {
+      throw Exception('User ID not found');
+    }
+    print(userId);
     try {
       final response = await http.get(Uri.parse('$baseUrl/vehicles/$userId'));
       if (response.statusCode == 200) {
@@ -54,6 +64,10 @@ class VehicleService {
     required String vehicleId,
     required double mileage,
   }) async {
+    final userId = await getUserId();
+    if (userId == null) {
+      throw Exception('User ID not found');
+    }
     // Debug prints
     print("Updating mileage for vehicle ID: $vehicleId");
     print("New mileage: $mileage");
@@ -138,6 +152,10 @@ class VehicleService {
     required String preferredBrand,
     required String nickname,
   }) async {
+    final userId = await getUserId();
+    if (userId == null) {
+      throw Exception('User ID not found');
+    }
     final response = await http.post(
       Uri.parse('$baseUrl/addVehicle'),
       headers: <String, String>{
@@ -170,6 +188,10 @@ class VehicleService {
   Future<void> removeVehicle({
     required String vehicleId,
   }) async {
+    final userId = await getUserId();
+    if (userId == null) {
+      throw Exception('User ID not found');
+    }
     try {
       final response = await http.delete(
         Uri.parse('$baseUrl/removeUserVehicle'),
@@ -190,6 +212,7 @@ class VehicleService {
       rethrow;
     }
   }
+
   Future<void> saveMaintenanceRecord({
     required String vehicleId,
     required DateTime date,
@@ -262,10 +285,9 @@ class VehicleService {
       }
     } catch (e) {
       print('Error in fetchOilFilters: $e');
-      rethrow;
     }
-  }
-
+  }  
+  
   Future<List<Map<String, dynamic>>> fetchBrakeFluids() async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/brakeFluids'));
@@ -280,20 +302,39 @@ class VehicleService {
       rethrow;
     }
   }
-  // Future<List<Map<String, dynamic>>> fetchMaintenanceHistory(String vehicleId) async {
-  //   try {
-  //     final response = await http.get(Uri.parse('$baseUrl/maintenanceHistory/$vehicleId'));
-  //     if (response.statusCode == 200) {
-  //       final List<dynamic> data = jsonDecode(response.body);
-  //       return List<Map<String, dynamic>>.from(data);
-  //     } else {
-  //       throw Exception('Failed to load maintenance history: ${response.statusCode}');
-  //     }
-  //   } catch (e) {
-  //     print('Error in fetchMaintenanceHistory: $e');
-  //     rethrow;
-  //   }
-  // }
+
+  Future<void> updateVehicleExpiry({
+    required String vehicleId,
+    required String expiryType,
+    required DateTime newDate,
+  }) async {
+    final userId = await getUserId();
+    if (userId == null) {
+      throw Exception('User ID not found');
+    }
+    try {
+      print(vehicleId);
+      print('him: $userId');
+      final response = await http.put(
+        Uri.parse('$baseUrl/vehicles/expiry/$vehicleId'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode({
+          'expiryType': expiryType,
+          'newDate': newDate.toIso8601String(),
+          'userID': userId,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to update expiry date: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error in updateVehicleExpiry: $e');
+      rethrow;
+    }
+  }
 
   Future<List<Map<String, dynamic>>> fetchMaintenanceHistory() async {
     try {
@@ -309,19 +350,83 @@ class VehicleService {
       rethrow;
     }
   }
-  // Future<List<Map<String, dynamic>>> fetchMaintenanceHistory(String vehicleId) async {
-  //   try {
-  //     final response = await http.get(Uri.parse('$baseUrl/maintenanceHistory/$vehicleId'));
-  //     if (response.statusCode == 200) {
-  //       final List<dynamic> data = jsonDecode(response.body);
-  //       return List<Map<String, dynamic>>.from(data);
-  //     } else {
-  //       throw Exception('Failed to load maintenance history: ${response.statusCode}');
-  //     }
-  //   } catch (e) {
-  //     print('Error in fetchMaintenanceHistory: $e');
-  //     rethrow;
-  //   }
-  // }
 
+  // Updated fetchVehicleSpecs method with proper image URL handling
+  Future<Map<String, dynamic>> fetchVehicleSpecs(
+      String make, String model, String year, String engine) async {
+    try {
+      // Debug the parameters
+      print('Fetching specs for: $make $model $year $engine');
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/vehicleSpecs/$make/$model/$year/$engine'),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+
+        // Debug the response
+        print('API Response: $data');
+
+        // Check if the image URL exists and is valid
+        if (!data.containsKey('imageUrl') || data['imageUrl'] == null || data['imageUrl'].toString().isEmpty) {
+          // If no image is provided, try to fetch a generic vehicle image
+          try {
+            // Attempt to get a generic image for the make and model
+            final String encodedMake = Uri.encodeComponent(make);
+            final String encodedModel = Uri.encodeComponent(model);
+
+            final fallbackResponse = await http.get(
+              Uri.parse('$baseUrl/vehicleImage/$encodedMake/$encodedModel'),
+            );
+
+            if (fallbackResponse.statusCode == 200) {
+              final Map<String, dynamic> fallbackData = json.decode(fallbackResponse.body);
+              if (fallbackData.containsKey('imageUrl') &&
+                  fallbackData['imageUrl'] != null &&
+                  fallbackData['imageUrl'].toString().isNotEmpty) {
+                // Use the fallback image
+                data['imageUrl'] = fallbackData['imageUrl'];
+                print('Using fallback image: ${fallbackData['imageUrl']}');
+              }
+            }
+          } catch (imageError) {
+            print('Error fetching fallback image: $imageError');
+            // Continue without an image if fallback fails
+          }
+        }
+
+        return data;
+      } else {
+        throw Exception(
+            'Failed to load vehicle specifications: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error in fetchVehicleSpecs: $e');
+      rethrow;
+    }
+  }
+
+  // Add a new method to directly fetch a vehicle image
+  Future<String?> fetchVehicleImage(String make, String model) async {
+    try {
+      final String encodedMake = Uri.encodeComponent(make);
+      final String encodedModel = Uri.encodeComponent(model);
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/vehicleImage/$encodedMake/$encodedModel'),
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        return data['imageUrl'];
+      } else {
+        print('Failed to fetch vehicle image: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error in fetchVehicleImage: $e');
+      return null; // Return null instead of rethrowing to handle gracefully
+    }
+  }
 }

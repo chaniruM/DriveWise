@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'vehicle_spec_screen.dart';
+import 'package:drivewise/services/vehicle_service.dart';
 
 class QuickLookupScreen extends StatefulWidget {
   @override
@@ -8,26 +9,86 @@ class QuickLookupScreen extends StatefulWidget {
 }
 
 class _QuickLookupScreenState extends State<QuickLookupScreen> {
-  final List<String> makes = ['Toyota', 'BMW', 'Audi', 'Nissan', 'Mercedes', 'Land Rover', 'Mazda', 'Honda'];
-  final Map<String, List<String>> models = {
-    'Toyota': ['Axio', 'Corolla', 'Camry'],
-    'BMW': ['X5', 'X3', 'M3'],
-    'Audi': ['A3', 'A4', 'Q7'],
-    'Nissan': ['Altima', 'Skyline', 'Juke'],
-    'Mercedes': ['C-Class', 'E-Class', 'S-Class'],
-    'Land Rover': ['Defender', 'Discovery', 'Range Rover'],
-    'Mazda': ['CX-5', 'Mazda3', 'RX-8'],
-    'Honda': ['Civic', 'Accord', 'CR-V'],
-  };
-  final List<String> years = ['2024', '2023', '2022', '2021', '2020'];
-  final List<String> engines = ['1.5L', '2.0L', '3.0L Turbo', 'Electric'];
+  final _formKey = GlobalKey<FormState>();
+  final VehicleService _vehicleService = VehicleService();
+  String? selectedMake,
+      selectedModel,
+      selectedYear,
+      selectedEngine,
+      selectedBrand;
 
-  String? selectedMake;
-  String? selectedModel;
-  String? selectedYear;
-  String? selectedEngine;
+  // Lists for dropdown options
+  List<String> makes = [];
+  Map<String, List<String>> models = {};
+  List<String> engineTypes = [];
+  List<String> years = [];
+  List<String> brands = [];
+  bool isLoading = true;
 
-  final _formKey = GlobalKey<FormState>(); // Form key for validation
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    setState(() => isLoading = true);
+
+    try {
+      // Load makes
+      makes = await _vehicleService.fetchMakes();
+
+      // Load brands for preferred brand dropdown
+      brands = await _vehicleService.fetchBrands();
+
+      setState(() => isLoading = false);
+    } catch (e) {
+      print('Error loading initial data: $e');
+      setState(() => isLoading = false);
+    }
+  }
+
+  // Load models when make is selected
+  Future<void> _loadModels(String make) async {
+    setState(() => isLoading = true);
+
+    try {
+      final modelsList = await _vehicleService.fetchModels(make);
+      setState(() {
+        models[make] = modelsList;
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading models: $e');
+      setState(() => isLoading = false);
+    }
+  }
+
+  // Load engines when model is selected
+  Future<void> _loadEngines(String make, String model) async {
+    setState(() => isLoading = true);
+
+    try {
+      engineTypes = await _vehicleService.fetchEngines(make, model);
+      setState(() => isLoading = false);
+    } catch (e) {
+      print('Error loading engines: $e');
+      setState(() => isLoading = false);
+    }
+  }
+
+  // Load years when engine is selected
+  Future<void> _loadYears(String make, String model, String engine) async {
+    setState(() => isLoading = true);
+
+    try {
+      years = await _vehicleService.fetchYears(make, model, engine);
+      setState(() => isLoading = false);
+    } catch (e) {
+      print('Error loading years: $e');
+      setState(() => isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +107,9 @@ class _QuickLookupScreenState extends State<QuickLookupScreen> {
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       backgroundColor: const Color(0xFF0D1128),
-      body: Padding(
+      body: isLoading
+          ? Center(child: CircularProgressIndicator(color: Colors.deepOrange))
+          : Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Form(
@@ -60,7 +123,6 @@ class _QuickLookupScreenState extends State<QuickLookupScreen> {
                 ),
                 SizedBox(
                   height: 270,
-
                   child: Center(
                     child: Lottie.asset(
                       'assets/animations/car_animation.json',
@@ -73,47 +135,43 @@ class _QuickLookupScreenState extends State<QuickLookupScreen> {
                   setState(() {
                     selectedMake = value;
                     selectedModel = null;
+                    selectedEngine = null;
+                    selectedYear = null;
                   });
+                  if (value != null) {
+                    _loadModels(value);
+                  }
                 }),
                 const SizedBox(height: 10),
-                buildDropdown('Model:', selectedMake != null ? models[selectedMake!] ?? [] : [], selectedModel, (value) {
-                  setState(() => selectedModel = value);
+                buildDropdown(
+                    'Model:',
+                    selectedMake != null
+                        ? models[selectedMake] ?? []
+                        : [],
+                    selectedModel, (value) {
+                  setState(() {
+                    selectedModel = value;
+                    selectedEngine = null;
+                    selectedYear = null;
+                  });
+                  if (selectedMake != null && value != null) {
+                    _loadEngines(selectedMake!, value);
+                  }
                 }),
+                const SizedBox(height: 10),
+                buildDropdown('Engine:', engineTypes, selectedEngine,
+                        (value) {
+                      setState(() => selectedEngine = value);
+                      if (selectedMake != null &&
+                          selectedModel != null &&
+                          value != null) {
+                        _loadYears(selectedMake!, selectedModel!, value);
+                      }
+                    }),
                 const SizedBox(height: 10),
                 buildDropdown('Year:', years, selectedYear, (value) {
                   setState(() => selectedYear = value);
                 }),
-                const SizedBox(height: 10),
-                buildDropdown('Engine:', engines, selectedEngine, (value) {
-                  setState(() => selectedEngine = value);
-                }),
-                const SizedBox(height: 20),
-                const Center(child: Text("Or", style: TextStyle(color: Colors.white))),
-                const SizedBox(height: 20),
-
-                TextField(
-                  style: const TextStyle(color: Colors.black),
-                  decoration: InputDecoration(
-                    labelText: 'VIN',
-                    labelStyle: const TextStyle(color: Colors.black),
-                    filled: true,
-                    fillColor: Colors.grey[200],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(5),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[700],
-                    foregroundColor: Colors.white,
-                  ),
-                  onPressed: () {},
-                  child: const Text('Open Camera'),
-                ),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -135,7 +193,6 @@ class _QuickLookupScreenState extends State<QuickLookupScreen> {
                       );
                     }
                   },
-
                   child: const Text('Search'),
                 ),
               ],
@@ -146,39 +203,43 @@ class _QuickLookupScreenState extends State<QuickLookupScreen> {
     );
   }
 
-  Widget buildDropdown(String label, List<String> items, String? selectedValue, ValueChanged<String?> onChanged) {
-    return Row(
+  Widget buildDropdown(String label, List<String> items, String? selectedValue,
+      ValueChanged<String?> onChanged) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          flex: 1,
-          child: Text(
-            label,
-            style: const TextStyle(color: Colors.white60),
-          ),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white60),
         ),
-        Expanded(
-          flex: 2,
-          child: DropdownButtonFormField<String>(
-            decoration: InputDecoration(
-              hintText: 'Select Option',
-              hintStyle: const TextStyle(color: Colors.grey),
-              filled: true,
-              fillColor: Colors.grey[200],
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(5),
-                borderSide: BorderSide.none,
-              ),
+        const SizedBox(height: 4),
+        DropdownButtonFormField<String>(
+          isExpanded: true, // This prevents overflow
+          decoration: InputDecoration(
+            hintText: 'Select Option',
+            hintStyle: const TextStyle(color: Colors.grey),
+            filled: true,
+            fillColor: Colors.grey[200],
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(5),
+              borderSide: BorderSide.none,
             ),
-            value: selectedValue,
-            items: items.map((item) {
-              return DropdownMenuItem(
-                value: item,
-                child: Text(item, style: const TextStyle(color: Colors.black)),
-              );
-            }).toList(),
-            onChanged: onChanged,
-            validator: (value) => value == null ? 'Please select $label' : null, // Validation
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           ),
+          value: selectedValue,
+          items: items.map((item) {
+            return DropdownMenuItem(
+              value: item,
+              child: Text(
+                item,
+                style: const TextStyle(color: Colors.black),
+                overflow: TextOverflow.ellipsis, // Prevents text overflow
+              ),
+            );
+          }).toList(),
+          onChanged: onChanged,
+          validator: (value) =>
+          value == null ? 'Please select $label' : null,
         ),
       ],
     );

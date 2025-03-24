@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:drivewise/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
@@ -23,10 +24,11 @@ class TokenService {
 
   static Future<void> logout(BuildContext context) async {
     await clearToken(); // Remove token and user email
+    await ApiService.clearUserId();
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => LoginScreen()),
-      (route) => false, // Remove all previous routes
+          (route) => false, // Remove all previous routes
     );
   }
 
@@ -39,7 +41,7 @@ class TokenService {
       if (parts.length != 3) return true;
 
       final payload =
-          json.decode(utf8.decode(base64.decode(base64.normalize(parts[1]))));
+      json.decode(utf8.decode(base64.decode(base64.normalize(parts[1]))));
       final expiry = payload["exp"] * 1000;
       final now = DateTime.now().millisecondsSinceEpoch;
 
@@ -47,8 +49,9 @@ class TokenService {
         return true; // Token expired
       }
 
-      // Refresh token if it's about to expire in 5 minutes
-      if ((expiry - now) < 5 * 60 * 1000) {
+      // Refresh token if it's about to expire in 3 days (for 30-day tokens)
+      // Using 3 days as a reasonable refresh window for a 30-day token
+      if ((expiry - now) < 3 * 24 * 60 * 60 * 1000) {
         await refreshAuthToken();
       }
 
@@ -63,7 +66,7 @@ class TokenService {
     if (token == null) return;
 
     final response = await http.post(
-      Uri.parse("http://192.168.154.131:5000/api/auth/refresh"),
+      Uri.parse("http://172.20.10.3:5001/api/auth/refresh"),
       headers: {"Authorization": "Bearer $token"},
     );
 

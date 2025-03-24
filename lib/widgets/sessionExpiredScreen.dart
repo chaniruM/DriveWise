@@ -14,8 +14,11 @@ class _SessionExpiredScreenState extends State<SessionExpiredScreen> {
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => LoginScreen()),
-              (route) => false,
+          MaterialPageRoute(
+            builder: (context) => LoginScreen(),
+            settings: RouteSettings(name: '/login'),
+          ),
+          (route) => false,
         );
       }
     });
