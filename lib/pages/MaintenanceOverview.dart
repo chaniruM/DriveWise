@@ -19,29 +19,7 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
     'Oil Filter': false,
     'Brake Fluid': false,
   };
-//   List<Map<String, dynamic>> maintenanceRecords = []; // List to store maintenance records
-//
-//   @override
-//   void initState() {
-//     super.initState();
-//     fetchUserVehicles();
-//     _loadVehicles();
-//     _fetchReplacementData();
-//     _loadMaintenanceRecords(); // Load maintenance records when the screen initializes
-//   }
-//
-//   Load maintenance records
-//   Future<void> _loadMaintenanceRecords() async {
-//     try {
-//       final records = await vehicleService.fetchMaintenanceRecords(_vehicleReference!);
-//       setState(() {
-//         maintenanceRecords = records;
-//       });
-//     } catch (e) {
-//       debugPrint('Error loading maintenance records: $e');
-//     }
-//   }
-// }
+
 
   // Store fetched data for each replacement type
   final Map<String, List<Map<String, dynamic>>> replacementData = {
@@ -339,14 +317,14 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
               children: [
                 ElevatedButton(
                   onPressed: () async {
-                    print(selectedProducts);
-                    print(selectedProducts['Engine Oil']);
-                    print(selectedProducts['Transmission Oil']);
-                    print(selectedProducts['Oil Filter']);
-                    print(selectedProducts['Brake Fluid']);
-                    print(_vehicleReference);
-                    print(selectedDate);
-                    print(odometerController.text);
+                    // print(selectedProducts);
+                    // print(selectedProducts['Engine Oil']);
+                    // print(selectedProducts['Transmission Oil']);
+                    // print(selectedProducts['Oil Filter']);
+                    // print(selectedProducts['Brake Fluid']);
+                    // print(_vehicleReference);
+                    // print(selectedDate);
+                    // print(odometerController.text);
                     if (_vehicleReference == null || selectedDate == null || odometerController.text.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Please fill all fields')),
