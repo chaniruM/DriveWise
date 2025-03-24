@@ -200,7 +200,7 @@ class _HomePageState extends State<HomePage> {
       });
 
       // Check if target distance is reached
-      if (_mileage >= _vehicles.firstWhere((vehicle) => vehicle['name'] == _selectedVehicle)['next_service'] && !_notificationSent) {
+      if ((_mileage+150) >= _vehicles.firstWhere((vehicle) => vehicle['name'] == _selectedVehicle)['next_service'] && !_notificationSent) {
         NotiService().showNotification(
           title: 'Service due!',
           body: 'Your regular vehicle maintenance for $_selectedVehicle is due. Please book an appointment asap.',

@@ -37,10 +37,7 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
     'Brake Fluid': null,
   };
 
-  String? selectedVehicleId;
-  List<Map<String, dynamic>> userVehicles = [];
-
-  // final VehicleService vehicleService = VehicleService();
+  final VehicleService vehicleService = VehicleService();
 
   @override
   void initState() {
@@ -53,23 +50,23 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
   // Fetch data for all replacement types
   Future<void> _fetchReplacementData() async {
     try {
-      // final engineOils = await vehicleService.fetchEngineOils();
-      // final transmissionOils = await vehicleService.fetchTransmissionOils();
-      // final oilFilters = await vehicleService.fetchOilFilters();
-      // final brakeFluids = await vehicleService.fetchBrakeFluids();
-      //
-      // // Debug prints
-      // print('Engine Oils: $engineOils');
-      // print('Transmission Oils: $transmissionOils');
-      // print('Oil Filters: $oilFilters');
-      // print('Brake Fluids: $brakeFluids');
-      //
-      // setState(() {
-      //   replacementData['Engine Oil'] = engineOils;
-      //   replacementData['Transmission Oil'] = transmissionOils;
-      //   replacementData['Oil Filter'] = oilFilters;
-      //   replacementData['Brake Fluid'] = brakeFluids;
-      // });
+      final engineOils = await vehicleService.fetchEngineOils();
+      final transmissionOils = await vehicleService.fetchTransmissionOils();
+      final oilFilters = await vehicleService.fetchOilFilters();
+      final brakeFluids = await vehicleService.fetchBrakeFluids();
+
+      // Debug prints
+      print('Engine Oils: $engineOils');
+      print('Transmission Oils: $transmissionOils');
+      print('Oil Filters: $oilFilters');
+      print('Brake Fluids: $brakeFluids');
+
+      setState(() {
+        replacementData['Engine Oil'] = engineOils;
+        replacementData['Transmission Oil'] = transmissionOils;
+        replacementData['Oil Filter'] = oilFilters;
+        replacementData['Brake Fluid'] = brakeFluids;
+      });
     } catch (e) {
       debugPrint('Error fetching replacement data: $e');
     }
@@ -77,7 +74,7 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
 
   Future<void> _loadVehicles() async {
     try {
-      final data = await VehicleService().fetchUserVehicles();
+      final data = await vehicleService.fetchUserVehicles();
       if (mounted) {
         setState(() {
           _vehicles = VehicleService().extractVehicles(data);
@@ -112,9 +109,9 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
 
   Future<void> fetchUserVehicles() async {
     try {
-      final data = await VehicleService().fetchUserVehicles();
+      final data = await vehicleService.fetchUserVehicles();
       setState(() {
-        _vehicles = VehicleService().extractVehicles(data);
+        _vehicles = vehicleService.extractVehicles(data);
       });
     } catch (e) {
       print('Error fetching user vehicles: $e');
@@ -140,11 +137,8 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Maintenance Overview',
-            style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white)),
-        backgroundColor: Color(0xFF030B23),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.teal,
         elevation: 5,
       ),
       body: SingleChildScrollView(
@@ -153,29 +147,12 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 16),
-//             DropdownButton<String>(
-//               value: selectedVehicleId,
-//               hint: const Text('Select Vehicle'),
-//               onChanged: (String? newValue) {
-//                 setState(() {
-//                   selectedVehicleId = newValue;
-//                 });
-//               },
-//               items: userVehicles.map<DropdownMenuItem<String>>(
-//                   (Map<String, dynamic> vehicle) {
-//                 return DropdownMenuItem<String>(
-//                   value: vehicle['id'],
-//                   child: Text(vehicle['name']),
-//                 );
-//               }).toList(),
-//             ),
             _buildVehicleSelector(),
             const SizedBox(height: 16),
             Row(
               children: [
                 const Text('Date:',
-                    style:
-                    TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 Expanded(
                   child: InkWell(
                     onTap: () => _selectDate(context),
@@ -196,8 +173,7 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.calendar_today,
-                      color: Color(0xFF030B23)),
+                  icon: const Icon(Icons.calendar_today, color: Colors.teal),
                   onPressed: () => _selectDate(context),
                 ),
               ],
@@ -206,8 +182,7 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
             Row(
               children: [
                 const Text('Odometer:',
-                    style:
-                    TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 Expanded(
                   child: TextField(
                     controller: odometerController,
@@ -215,8 +190,7 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
                     decoration: InputDecoration(
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(
-                            color: Color(0xFF030B23), width: 1.5),
+                        borderSide: const BorderSide(color: Colors.teal, width: 1.5),
                       ),
                       hintText: 'Enter mileage',
                       filled: true,
@@ -229,10 +203,7 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
             const SizedBox(height: 20),
             const Text(
               'Replacements',
-              style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.orangeAccent),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.teal),
             ),
             ...replacements.keys.map((key) {
               return Card(
@@ -241,8 +212,7 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Padding(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -250,7 +220,7 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
                         children: [
                           Checkbox(
                             value: replacements[key],
-                            activeColor: Color(0xFF030B23),
+                            activeColor: Colors.teal,
                             onChanged: (bool? value) {
                               setState(() {
                                 replacements[key] = value ?? false;
@@ -260,21 +230,6 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
                           Text(key, style: const TextStyle(fontSize: 16)),
                         ],
                       ),
-//                       DropdownButton<String>(
-//                         hint: const Text('Select product used',
-//                             style: TextStyle(fontSize: 14)),
-//                         items: ['Caltex', 'TOYOTA', 'TOTACHE']
-//                             .map((String value) => DropdownMenuItem<String>(
-//                                   value: value,
-//                                   child: Text(value,
-//                                       style: const TextStyle(fontSize: 14)),
-//                                 ))
-//                             .toList(),
-//                         onChanged: (String? newValue) {},
-//                         style: const TextStyle(color: Colors.black),
-//                         dropdownColor: Colors.white,
-//                         elevation: 4,
-//                       ),
                       if (replacementData[key]!.isEmpty)
                         const Text('No products available', style: TextStyle(fontSize: 14))
                       else

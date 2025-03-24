@@ -24,8 +24,8 @@ class _ProductRecState extends State<ProductRec> {
     'engine_oil': [],
     'transmission_oil': [],
     'brake_oil': [],
-    'air_filter': [],
-    'coolant': [],
+    'Coolants': [],
+    'oil_filter': [],
   };
 
   // List<String> brands = ['All', 'Brand A', 'Brand B', 'Brand C'];
@@ -41,7 +41,7 @@ class _ProductRecState extends State<ProductRec> {
   Future<void> fetchProducts() async {
     setState(() => isLoading = true);
     try {
-      List<String> categories = ['engine_oil', 'transmission_oil', 'brake_oil', 'air_filter', 'coolant'];
+      List<String> categories = ['engine_oil', 'transmission_oil', 'brake_oil', 'Coolants', 'oil_filter'];
       Map<String, List<dynamic>> fetchedProducts = {};
 
       for (String category in categories) {
@@ -65,48 +65,6 @@ class _ProductRecState extends State<ProductRec> {
 
 
 
-  // List<dynamic> applyFilters(List<dynamic> products) {
-  //   return products.where((product) {
-  //     double price = double.tryParse(product['price'].toString()) ?? 0;
-  //     bool matchesBrand = selectedBrand == 'All' || product['brand'] == selectedBrand;
-  //     bool matchesPrice = price >= minPrice && price <= maxPrice;
-  //     return matchesBrand && matchesPrice;
-  //   }).toList();
-  // }
-
-  // Widget filterWidget() {
-  //   return Padding(
-  //     padding: const EdgeInsets.all(10),
-  //     child: Column(
-  //       children: [
-  //         DropdownButton<String>(
-  //           value: selectedBrand,
-  //           items: brands.map((brand) {
-  //             return DropdownMenuItem(value: brand, child: Text(brand));
-  //           }).toList(),
-  //           onChanged: (value) {
-  //             setState(() {
-  //               selectedBrand = value!;
-  //             });
-  //           },
-  //         ),
-  //         RangeSlider(
-  //           values: RangeValues(minPrice, maxPrice),
-  //           min: 0,
-  //           max: 10000,
-  //           divisions: 20,
-  //           labels: RangeLabels(minPrice.toString(), maxPrice.toString()),
-  //           onChanged: (values) {
-  //             setState(() {
-  //               minPrice = values.start;
-  //               maxPrice = values.end;
-  //             });
-  //           },
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 
   void updateCategory(String category) {
     setState(() {
@@ -164,11 +122,11 @@ class _ProductRecState extends State<ProductRec> {
             const SectionTitle(title: 'Brake Oils'),
             productGrid(categorizedProducts['brake_oil'] ?? []),
 
-            const SectionTitle(title: 'Air Filters'),
-            productGrid(categorizedProducts['air_filter'] ?? []),
+            const SectionTitle(title: 'Coolants'),
+            productGrid(categorizedProducts['Coolants'] ?? []),
 
-            const SectionTitle(title: 'Coolant'),
-            productGrid(categorizedProducts['coolant'] ?? []),
+            const SectionTitle(title: 'Oil Filters'),
+            productGrid(categorizedProducts['oil_filter'] ?? []),
 
             const SizedBox(height: 20),
           ],
@@ -222,13 +180,13 @@ class ProductCard extends StatelessWidget {
           ),
 
           Container(
-             padding: const EdgeInsets.all(10),
-             decoration: const BoxDecoration(
-               color: Color(0xFFE95B15),
-               borderRadius: BorderRadius.vertical(top: Radius.circular(15), bottom: Radius.circular(15)),
-             ),
+            padding: const EdgeInsets.all(10),
+            decoration: const BoxDecoration(
+              color: Color(0xFFE95B15),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(15), bottom: Radius.circular(15)),
+            ),
 
-             alignment: Alignment.centerLeft,
+            alignment: Alignment.centerLeft,
             child: Column(
               children: [
                 Text(
