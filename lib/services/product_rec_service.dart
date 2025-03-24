@@ -35,6 +35,32 @@ class ProductRecService {
 
 
 
+// class ProductRecService {
+//   static Future<List<dynamic>> getProducts(String category) async {
+//     try {
+//       final response = await http.get(
+//         Uri.parse('http://192.168.207.56:5000/api/products'),
+//       );
+//
+//       if (response.statusCode == 200) {
+//         final data = json.decode(response.body);
+//         if (data.containsKey(category) && data[category] is List) {
+//           return data[category];
+//         } else {
+//           print('Category "$category" not found in response');
+//           return [];
+//         }
+//       } else {
+//         print('Failed with status: ${response.statusCode}, body: ${response.body}');
+//         return [];
+//       }
+//     } catch (e) {
+//       print('Error fetching products: $e');
+//       return [];
+//     }
+//   }
+//
+// }
 
 
 

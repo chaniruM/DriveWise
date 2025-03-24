@@ -1,9 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../services/product_rec_service.dart';
-import '../widgets/search_and_filter.dart';
 import 'package:http/http.dart' as http;
-
-
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProductRec extends StatefulWidget {
   const ProductRec({Key? key}) : super(key: key);
@@ -16,6 +15,11 @@ class _ProductRecState extends State<ProductRec> {
   String selectedCategory = 'engine_oil';
   List<dynamic> products = [];
   bool isLoading = false;
+
+  String selectedBrand = 'All';
+  double minPrice = 0;
+  double maxPrice = 10000;
+
   Map<String, List<dynamic>> categorizedProducts = {
     'engine_oil': [],
     'transmission_oil': [],
@@ -23,6 +27,9 @@ class _ProductRecState extends State<ProductRec> {
     'air_filter': [],
     'coolant': [],
   };
+
+  // List<String> brands = ['All', 'Brand A', 'Brand B', 'Brand C'];
+
 
 
   @override
@@ -58,6 +65,48 @@ class _ProductRecState extends State<ProductRec> {
 
 
 
+  // List<dynamic> applyFilters(List<dynamic> products) {
+  //   return products.where((product) {
+  //     double price = double.tryParse(product['price'].toString()) ?? 0;
+  //     bool matchesBrand = selectedBrand == 'All' || product['brand'] == selectedBrand;
+  //     bool matchesPrice = price >= minPrice && price <= maxPrice;
+  //     return matchesBrand && matchesPrice;
+  //   }).toList();
+  // }
+
+  // Widget filterWidget() {
+  //   return Padding(
+  //     padding: const EdgeInsets.all(10),
+  //     child: Column(
+  //       children: [
+  //         DropdownButton<String>(
+  //           value: selectedBrand,
+  //           items: brands.map((brand) {
+  //             return DropdownMenuItem(value: brand, child: Text(brand));
+  //           }).toList(),
+  //           onChanged: (value) {
+  //             setState(() {
+  //               selectedBrand = value!;
+  //             });
+  //           },
+  //         ),
+  //         RangeSlider(
+  //           values: RangeValues(minPrice, maxPrice),
+  //           min: 0,
+  //           max: 10000,
+  //           divisions: 20,
+  //           labels: RangeLabels(minPrice.toString(), maxPrice.toString()),
+  //           onChanged: (values) {
+  //             setState(() {
+  //               minPrice = values.start;
+  //               maxPrice = values.end;
+  //             });
+  //           },
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   void updateCategory(String category) {
     setState(() {
@@ -84,7 +133,7 @@ class _ProductRecState extends State<ProductRec> {
         crossAxisCount: 2,
         crossAxisSpacing: 20,
         mainAxisSpacing: 20,
-        childAspectRatio: 0.75,
+        childAspectRatio: 0.65,
       ),
 
       itemCount: products.length,
