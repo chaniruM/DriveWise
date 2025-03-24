@@ -14,8 +14,9 @@ DriveWise is a mobile application built with Flutter that helps users manage the
 - Store locator for service centers
 - Theme customization options
 
-## Project Structure
 
+## Project Structure
+```
 DriveWise/
 ├── .dart_tool
 ├── .idea
@@ -52,6 +53,7 @@ DriveWise/
 ├── .metadata
 ├── analysis_options.yaml
 └── pubspec.yaml        # Project dependencies
+```
 
 
 ## Getting Started
@@ -115,7 +117,7 @@ The application follows a layered architecture:
 
 ## Official Channels
 - *Website*: [www.drivewiselk.com](https://www.drivewiselk.com/)
-- *Email*: [Not specified in the code]
+- *Email*: [drivewise.care@gmail.com]
 
 ## Social Media
 - *Instagram*: [@_drivewise_](https://www.instagram.com/__drivewise__)
