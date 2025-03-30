@@ -9,7 +9,7 @@ class VehicleService {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('user_id');
   }
-  final String baseUrl = 'http://192.168.1.16:5000/api';
+  final String baseUrl = 'http://172.20.10.3:5100/api';
 
   // Fetch user's vehicles
   Future<Map<String, dynamic>> fetchUserVehicles() async {
@@ -41,6 +41,7 @@ class VehicleService {
       'year': vehicle['year'] ?? 0,
       'mileage': (vehicle['currentMileage'] ?? 0).toDouble(),
       'id': vehicle['id'] ?? '',
+      'vehicleRef': vehicle['vehicleRef'] ?? '',
       'next_service': (vehicle['nextService'] ?? 0).toDouble()
     }).toList();
   }
@@ -212,6 +213,97 @@ class VehicleService {
     }
   }
 
+  Future<void> saveMaintenanceRecord({
+    required String vehicleId,
+    required DateTime date,
+    required double odometer,
+    required String engineOil,
+    required String transmissionOil,
+    required String airFilter,
+    required String brakeFluid,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/saveMaintenanceRecord'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, dynamic>{
+        'vehicleId': vehicleId,
+        'date': date.toIso8601String(),
+        'odometer': odometer,
+        'engineOil': engineOil,
+        'transmissionOil': transmissionOil,
+        'airFilter': airFilter,
+        'brakeFluid': brakeFluid,
+      }),
+    );
+
+    if (response.statusCode != 201) {
+      throw Exception('Failed to save maintenance record: ${response.body}');
+    }
+  }
+
+  // Add this method to vehicle_service.dart
+  Future<List<Map<String, dynamic>>> fetchEngineOils() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/engineOils'));
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return List<Map<String, dynamic>>.from(data);
+      } else {
+        throw Exception('Failed to load engine oils: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error in fetchEngineOils: $e');
+      rethrow;
+    }
+  }
+  // Add these methods to vehicle_service.dart
+  Future<List<Map<String, dynamic>>> fetchTransmissionOils() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/transmissionOils'));
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return List<Map<String, dynamic>>.from(data);
+      } else {
+        throw Exception('Failed to load transmission oils: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error in fetchTransmissionOils: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchOilFilters() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/oilFilters'));
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return List<Map<String, dynamic>>.from(data);
+      } else {
+        throw Exception('Failed to load oil filters: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error in fetchOilFilters: $e');
+      rethrow;
+    }
+  }  
+  
+  Future<List<Map<String, dynamic>>> fetchBrakeFluids() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/brakeFluids'));
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return List<Map<String, dynamic>>.from(data);
+      } else {
+        throw Exception('Failed to load brake fluids: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error in fetchBrakeFluids: $e');
+      rethrow;
+    }
+  }
+
   Future<void> updateVehicleExpiry({
     required String vehicleId,
     required String expiryType,
@@ -241,6 +333,21 @@ class VehicleService {
       }
     } catch (e) {
       print('Error in updateVehicleExpiry: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchMaintenanceHistory() async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/maintenanceHistory')); // Removed vehicleId
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return List<Map<String, dynamic>>.from(data);
+      } else {
+        throw Exception('Failed to load maintenance history: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error in fetchMaintenanceHistory: $e');
       rethrow;
     }
   }

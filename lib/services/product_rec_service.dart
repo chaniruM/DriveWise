@@ -7,17 +7,23 @@ import 'package:drivewise/pages/product_reco.dart';
 class ProductRecService {
   static Future<List<dynamic>> getProducts(String category) async {
     try {
-      print('hello');
+      print('Fetching products for category: $category');
       final response = await http.get(
-          Uri.parse(
-              'http://192.168.207.56:5001/api/products?category=$category')
+          Uri.parse('http://192.168.207.56:5000/api/products')
       );
 
       if (response.statusCode == 200) {
-        return json.decode(response.body);
+        final data = json.decode(response.body);
+
+        // Ensure category exists in response
+        if (data.containsKey(category) && data[category] is List) {
+          return data[category]; // Correctly return the list
+        } else {
+          print('Category "$category" not found in response');
+          return [];
+        }
       } else {
-        print('Failed with status: ${response.statusCode}, body: ${response
-            .body}');
+        print('Failed with status: ${response.statusCode}, body: ${response.body}');
         throw Exception('Failed to load products');
       }
     } catch (e) {
@@ -26,4 +32,39 @@ class ProductRecService {
     }
   }
 }
+
+
+
+// class ProductRecService {
+//   static Future<List<dynamic>> getProducts(String category) async {
+//     try {
+//       final response = await http.get(
+//         Uri.parse('http://192.168.207.56:5000/api/products'),
+//       );
+//
+//       if (response.statusCode == 200) {
+//         final data = json.decode(response.body);
+//         if (data.containsKey(category) && data[category] is List) {
+//           return data[category];
+//         } else {
+//           print('Category "$category" not found in response');
+//           return [];
+//         }
+//       } else {
+//         print('Failed with status: ${response.statusCode}, body: ${response.body}');
+//         return [];
+//       }
+//     } catch (e) {
+//       print('Error fetching products: $e');
+//       return [];
+//     }
+//   }
+//
+// }
+
+
+
+
+
+
 
