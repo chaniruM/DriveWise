@@ -106,7 +106,7 @@ class _TroubleCodePageState extends State<TroubleCodePage> {
           if (characteristic.properties.notify || characteristic.properties.read) {
             _readCharacteristic = characteristic;
             await _readCharacteristic!.setNotifyValue(true);
-            _readCharacteristic!.value.listen(_onDataReceived);
+            // We'll set up listeners specifically when needed, not here
           }
         }
       }
@@ -123,22 +123,6 @@ class _TroubleCodePageState extends State<TroubleCodePage> {
     }
   }
 
-  void _onDataReceived(List<int> data) {
-    final response = utf8.decode(data).trim();
-    final dtcMatch = RegExp(r"43 ([0-9A-F ]+)").firstMatch(response);
-
-    if (dtcMatch != null) {
-      final dtcResponse = dtcMatch.group(1)!;
-      if (dtcResponse.trim().isEmpty || dtcResponse == "00" || dtcResponse == "NO DATA") {
-        setState(() {
-          troubleCodes = [{"code": "No error codes found", "type": "N/A", "status": "N/A"}];
-        });
-      } else {
-        _parseDTCs(dtcResponse);
-      }
-    }
-  }
-
   Future<void> _readDTCs() async {
     if (_selectedDevice == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -147,19 +131,22 @@ class _TroubleCodePageState extends State<TroubleCodePage> {
       return;
     }
 
+    setState(() {
+      troubleCodes.clear(); // Clear existing codes before new scan
+    });
+
     await _connectToOBD();
-    await _retrieveDTCs("03\r", "Current Faults");
-    await _retrieveDTCs("07\r", "Pending Faults");
-    await _retrieveDTCs("0A\r", "Permanent Faults");
-  }
 
-  Future<void> _retrieveDTCs(String command, String dtcType) async {
-    if (_writeCharacteristic == null) return;
+    if (_readCharacteristic == null || _writeCharacteristic == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to find required BLE characteristics")),
+      );
+      return;
+    }
 
-    await _writeCharacteristic!.write(utf8.encode(command), withoutResponse: false);
-    await Future.delayed(Duration(milliseconds: 500));
-
-    _readCharacteristic?.value.listen((data) {
+    // Create a single subscription to process all responses
+    final subscription = _readCharacteristic!.value.listen(null);
+    subscription.onData((data) {
       final response = utf8.decode(data).trim();
       final dtcMatch = RegExp(r"43 ([0-9A-F ]+)").firstMatch(response);
 
@@ -167,16 +154,65 @@ class _TroubleCodePageState extends State<TroubleCodePage> {
         final dtcResponse = dtcMatch.group(1)!;
         if (dtcResponse.trim().isEmpty || dtcResponse == "00" || dtcResponse == "NO DATA") {
           setState(() {
-            troubleCodes.add({"code": "No error codes found", "type": dtcType, "status": "N/A"});
+            troubleCodes.add({"code": "No error codes found", "type": "Current scan", "status": "N/A"});
           });
         } else {
-          _parseDTCs(dtcResponse, dtcType);
+          _parseDTCs(dtcResponse, "Current scan");
+        }
+      } else if (response.contains("47")) {
+        // For pending codes (mode 07)
+        final pendingMatch = RegExp(r"47 ([0-9A-F ]+)").firstMatch(response);
+        if (pendingMatch != null) {
+          final dtcResponse = pendingMatch.group(1)!;
+          if (dtcResponse.trim().isEmpty || dtcResponse == "00" || dtcResponse == "NO DATA") {
+            setState(() {
+              troubleCodes.add({"code": "No pending codes found", "type": "Pending", "status": "N/A"});
+            });
+          } else {
+            _parseDTCs(dtcResponse, "Pending");
+          }
+        }
+      } else if (response.contains("4A")) {
+        // For permanent codes (mode 0A)
+        final permMatch = RegExp(r"4A ([0-9A-F ]+)").firstMatch(response);
+        if (permMatch != null) {
+          final dtcResponse = permMatch.group(1)!;
+          if (dtcResponse.trim().isEmpty || dtcResponse == "00" || dtcResponse == "NO DATA") {
+            setState(() {
+              troubleCodes.add({"code": "No permanent codes found", "type": "Permanent", "status": "N/A"});
+            });
+          } else {
+            _parseDTCs(dtcResponse, "Permanent");
+          }
         }
       }
     });
+
+    try {
+      // Request current DTCs (Mode 03)
+      await _writeCharacteristic!.write(utf8.encode("03\r"), withoutResponse: false);
+      await Future.delayed(Duration(milliseconds: 1000));
+
+      // Request pending DTCs (Mode 07)
+      await _writeCharacteristic!.write(utf8.encode("07\r"), withoutResponse: false);
+      await Future.delayed(Duration(milliseconds: 1000));
+
+      // Request permanent DTCs (Mode 0A)
+      await _writeCharacteristic!.write(utf8.encode("0A\r"), withoutResponse: false);
+      await Future.delayed(Duration(milliseconds: 1000));
+    } finally {
+      // Clean up subscription after all commands have been processed
+      await subscription.cancel();
+    }
+
+    if (troubleCodes.isEmpty) {
+      setState(() {
+        troubleCodes.add({"code": "No diagnostic trouble codes found", "type": "All", "status": "Vehicle OK"});
+      });
+    }
   }
 
-  void _parseDTCs(String response, [String dtcType = "N/A"]) {
+  void _parseDTCs(String response, String dtcType) {
     List<Map<String, String>> dtcList = [];
     response = response.replaceAll(" ", "");
 
@@ -282,11 +318,17 @@ class _TroubleCodePageState extends State<TroubleCodePage> {
   }
 
   void clearFaults() {
+    if (_writeCharacteristic != null) {
+      // Send the OBD-II clear fault code command (Mode 04)
+      _writeCharacteristic!.write(utf8.encode("04\r"), withoutResponse: false);
+    }
+
     setState(() {
       troubleCodes.clear();
     });
+
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Faults cleared.")),
+      const SnackBar(content: Text("Clearing fault codes...")),
     );
   }
 
@@ -296,14 +338,14 @@ class _TroubleCodePageState extends State<TroubleCodePage> {
       appBar: AppBar(
         title: const Text("Trouble Codes",
           style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 26,
-          color: Colors.white,
-        ),),
+            fontWeight: FontWeight.bold,
+            fontSize: 26,
+            color: Colors.white,
+          ),),
         actions: [
           IconButton(
             icon: const Icon(LucideIcons.settings),
-            onPressed: () {}, // Placeholder for settings functionality
+            onPressed: () {},
           ),
         ],
       ),
@@ -334,12 +376,25 @@ class _TroubleCodePageState extends State<TroubleCodePage> {
                 itemCount: troubleCodes.length,
                 itemBuilder: (context, index) {
                   var trouble = troubleCodes[index];
+                  bool isError = trouble["code"] != "No error codes found" &&
+                      trouble["code"] != "No diagnostic trouble codes found" &&
+                      trouble["code"] != "No pending codes found" &&
+                      trouble["code"] != "No permanent codes found";
+
+                  Color cardColor = Colors.green[300]!;
+                  if (isError) {
+                    cardColor = trouble["type"] == "Current scan"
+                        ? Colors.red[300]!
+                        : Colors.amber[300]!;
+                  }
+
                   return Card(
-                    color: trouble["status"] == "Current fault"
-                        ? Colors.red[300]
-                        : Colors.amber[300],
+                    color: cardColor,
                     child: ListTile(
-                      leading: const Icon(LucideIcons.alertTriangle, color: Colors.white),
+                      leading: Icon(
+                          isError ? LucideIcons.alertTriangle : LucideIcons.check,
+                          color: Colors.white
+                      ),
                       title: Text("${trouble["code"]} - ${trouble["type"]}",
                           style: const TextStyle(fontWeight: FontWeight.bold)),
                       subtitle: Text(trouble["status"] ?? ""),
@@ -350,7 +405,7 @@ class _TroubleCodePageState extends State<TroubleCodePage> {
             ),
             const SizedBox(height: 10),
             ElevatedButton(
-              onPressed: clearFaults,
+              onPressed: _selectedDevice != null ? clearFaults : null,
               child: const Text("Clear faults"),
             ),
             const SizedBox(height: 10),
