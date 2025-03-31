@@ -9,7 +9,7 @@ class VehicleService {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('user_id');
   }
-  final String baseUrl = 'http://172.20.10.3:5100/api';
+  final String baseUrl = 'http://172.20.10.2:5100/api';
 
   // Fetch user's vehicles
   Future<Map<String, dynamic>> fetchUserVehicles() async {
@@ -216,12 +216,16 @@ class VehicleService {
   Future<void> saveMaintenanceRecord({
     required String vehicleId,
     required DateTime date,
-    required double odometer,
+    required double mileageAtService,
+    required double nextService,
     required String engineOil,
     required String transmissionOil,
     required String airFilter,
     required String brakeFluid,
   }) async {
+    print(mileageAtService);
+    print(nextService);
+    print(vehicleId);
     final response = await http.post(
       Uri.parse('$baseUrl/saveMaintenanceRecord'),
       headers: <String, String>{
@@ -230,7 +234,8 @@ class VehicleService {
       body: jsonEncode(<String, dynamic>{
         'vehicleId': vehicleId,
         'date': date.toIso8601String(),
-        'odometer': odometer,
+        'mileageAtService': mileageAtService,
+        'nextService': nextService,
         'engineOil': engineOil,
         'transmissionOil': transmissionOil,
         'airFilter': airFilter,
@@ -337,9 +342,9 @@ class VehicleService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchMaintenanceHistory() async {
+  Future<List<Map<String, dynamic>>> fetchMaintenanceHistory({required String vehicleId}) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/maintenanceHistory')); // Removed vehicleId
+      final response = await http.get(Uri.parse('$baseUrl/maintenanceHistory/$vehicleId'));
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         return List<Map<String, dynamic>>.from(data);
@@ -428,6 +433,33 @@ class VehicleService {
     } catch (e) {
       print('Error in fetchVehicleImage: $e');
       return null; // Return null instead of rethrowing to handle gracefully
+    }
+  }
+
+
+  Future<void> updateNextServiceMileage({
+    required String vehicleId,
+    required double nextServiceMileage,
+  }) async {
+
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/updateNextServiceMileage'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode({
+          'vehicleId': vehicleId,
+          'nextServiceMileage': nextServiceMileage,
+        }),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to update next service mileage: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error in updateNextServiceMileage: $e');
+      rethrow;
     }
   }
 }

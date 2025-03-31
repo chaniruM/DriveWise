@@ -9,10 +9,11 @@ class MaintenanceOverview extends StatefulWidget {
 
 class _MaintenanceOverviewState extends State<MaintenanceOverview> {
   String _selectedVehicle = '';
-  String? _vehicleReference = '';
+  String _vehicleReference = '';
   List<Map<String, dynamic>> _vehicles = [];
   DateTime? selectedDate;
-  final TextEditingController odometerController = TextEditingController();
+  final TextEditingController mileageAtService = TextEditingController();
+  final TextEditingController nextServiceController = TextEditingController();
   final Map<String, bool> replacements = {
     'Engine Oil': false,
     'Transmission Oil': false,
@@ -181,11 +182,33 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
             const SizedBox(height: 16),
             Row(
               children: [
-                const Text('Odometer:',
+                const Text('Mileage at Service:',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 Expanded(
                   child: TextField(
-                    controller: odometerController,
+                    controller: mileageAtService,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Colors.teal, width: 1.5),
+                      ),
+                      hintText: 'Enter mileage',
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Text('Next Service:',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                Expanded(
+                  child: TextField(
+                    controller: nextServiceController,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(
@@ -272,15 +295,7 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
               children: [
                 ElevatedButton(
                   onPressed: () async {
-                    // print(selectedProducts);
-                    // print(selectedProducts['Engine Oil']);
-                    // print(selectedProducts['Transmission Oil']);
-                    // print(selectedProducts['Oil Filter']);
-                    // print(selectedProducts['Brake Fluid']);
-                    // print(_vehicleReference);
-                    // print(selectedDate);
-                    // print(odometerController.text);
-                    if (_vehicleReference == null || selectedDate == null || odometerController.text.isEmpty) {
+                    if (selectedDate == null || nextServiceController.text.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Please fill all fields')),
                       );
@@ -289,14 +304,38 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
 
                     try {
                       await VehicleService().saveMaintenanceRecord(
-                        vehicleId: _vehicleReference!,
+                        vehicleId: _vehicleReference,
                         date: selectedDate!,
-                        odometer: double.parse(odometerController.text),
+                        mileageAtService: double.parse(mileageAtService.text),
+                        nextService: double.parse(nextServiceController.text),
                         engineOil: selectedProducts['Engine Oil'] ?? 'N/A',
                         transmissionOil: selectedProducts['Transmission Oil'] ?? 'N/A',
                         airFilter: selectedProducts['Oil Filter'] ?? 'N/A',
                         brakeFluid: selectedProducts['Brake Fluid'] ?? 'N/A',
                       );
+
+                      // Update next service mileage
+                      await VehicleService().updateNextServiceMileage(
+                        vehicleId: _vehicleReference,
+                        nextServiceMileage: double.parse(nextServiceController.text),
+                      );
+
+                      setState(() {
+                        selectedDate = null;
+                        mileageAtService.clear();
+                        nextServiceController.clear();
+
+                        // Reset checkboxes
+                        replacements.forEach((key, value) {
+                          replacements[key] = false;
+                        });
+
+                        // Reset selected products
+                        selectedProducts.forEach((key, value) {
+                          selectedProducts[key] = null;
+                        });
+                      });
+
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Maintenance record saved successfully')),
                       );
@@ -319,7 +358,7 @@ class _MaintenanceOverviewState extends State<MaintenanceOverview> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => MaintenanceHistoryScreen(),
+                        builder: (context) => MaintenanceHistoryScreen(vehicleId: _vehicleReference,),
                       ),
                     );
                   },

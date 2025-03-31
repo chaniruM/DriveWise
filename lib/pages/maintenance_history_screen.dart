@@ -6,6 +6,9 @@ import 'package:intl/intl.dart';
 
 class MaintenanceHistoryScreen extends StatefulWidget {
 
+  final String vehicleId;
+  const MaintenanceHistoryScreen({Key? key, required this.vehicleId}) : super(key: key);
+
   @override
   _MaintenanceHistoryScreenState createState() => _MaintenanceHistoryScreenState();
 }
@@ -24,7 +27,7 @@ class _MaintenanceHistoryScreenState extends State<MaintenanceHistoryScreen> {
   Future<void> _fetchMaintenanceHistory() async {
     try {
       debugPrint('Fetching all maintenance history');
-      final history = await VehicleService().fetchMaintenanceHistory();
+      final history = await VehicleService().fetchMaintenanceHistory(vehicleId: widget.vehicleId);
       debugPrint('Fetched history: $history');
       setState(() {
         _maintenanceHistory = history;
@@ -52,7 +55,9 @@ class _MaintenanceHistoryScreenState extends State<MaintenanceHistoryScreen> {
             margin: const EdgeInsets.all(8.0),
             child: ListTile(
               title: Text('Date: ${DateFormat('yyyy-MM-dd').format(DateTime.parse(record['date']))}'),
-              subtitle: Text('Odometer: ${record['odometer']}\n'
+              subtitle: Text(
+                  'Mileage at Service: ${record['mileageAtService']}\n'
+                  'Next Service Mileage: ${record['nextService']}\n'
                   'Engine Oil: ${record['engine_oil']}\n'
                   'Transmission Oil: ${record['transmission_oil']}\n'
                   'Air Filter: ${record['airfilters']}\n'
