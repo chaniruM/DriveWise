@@ -1,8 +1,8 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../services/product_rec_service.dart';
+import '../widgets/search_and_filter.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+
 
 class ProductRec extends StatefulWidget {
   const ProductRec({Key? key}) : super(key: key);
@@ -16,22 +16,6 @@ class _ProductRecState extends State<ProductRec> {
   List<dynamic> products = [];
   bool isLoading = false;
 
-  String selectedBrand = 'All';
-  double minPrice = 0;
-  double maxPrice = 10000;
-
-  Map<String, List<dynamic>> categorizedProducts = {
-    'engine_oil': [],
-    'transmission_oil': [],
-    'brake_oil': [],
-    'Coolants': [],
-    'oil_filter': [],
-  };
-
-  // List<String> brands = ['All', 'Brand A', 'Brand B', 'Brand C'];
-
-
-
   @override
   void initState() {
     super.initState();
@@ -41,16 +25,12 @@ class _ProductRecState extends State<ProductRec> {
   Future<void> fetchProducts() async {
     setState(() => isLoading = true);
     try {
-      List<String> categories = ['engine_oil', 'transmission_oil', 'brake_oil', 'Coolants', 'oil_filter'];
-      Map<String, List<dynamic>> fetchedProducts = {};
-
-      for (String category in categories) {
-        fetchedProducts[category] = await ProductRecService.getProducts(category);
-      }
+      List<dynamic> allProducts = await ProductRecService.getProducts(selectedCategory);
+      print('Fetched products: $allProducts');
 
       if (mounted) {
         setState(() {
-          categorizedProducts = fetchedProducts;
+          products = allProducts;
           isLoading = false;
         });
       }
@@ -60,9 +40,7 @@ class _ProductRecState extends State<ProductRec> {
         setState(() => isLoading = false);
       }
     }
-
   }
-
 
 
 
@@ -74,7 +52,7 @@ class _ProductRecState extends State<ProductRec> {
     Navigator.pop(context);
   }
 
-  Widget productGrid(List<dynamic> products) {
+  Widget productGrid() {
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -86,12 +64,11 @@ class _ProductRecState extends State<ProductRec> {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
+        crossAxisCount: 3,
         crossAxisSpacing: 20,
         mainAxisSpacing: 20,
-        childAspectRatio: 0.65,
+        childAspectRatio: 0.6,
       ),
 
       itemCount: products.length,
@@ -103,31 +80,18 @@ class _ProductRecState extends State<ProductRec> {
   }
 
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const CustomAppBar(),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
+      body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SectionTitle(title: 'Engine Oils'),
-            productGrid(categorizedProducts['engine_oil'] ?? []),
-
-            const SectionTitle(title: 'Transmission Oils'),
-            productGrid(categorizedProducts['transmission_oil'] ?? []),
-
-            const SectionTitle(title: 'Brake Oils'),
-            productGrid(categorizedProducts['brake_oil'] ?? []),
-
-            const SectionTitle(title: 'Coolants'),
-            productGrid(categorizedProducts['Coolants'] ?? []),
-
-            const SectionTitle(title: 'Oil Filters'),
-            productGrid(categorizedProducts['oil_filter'] ?? []),
-
+            SearchAndFilterBar(onFilterSelected: updateCategory),
+            const SectionTitle(title: 'Products'),
+            productGrid(),
             const SizedBox(height: 20),
           ],
         ),
@@ -138,17 +102,12 @@ class _ProductRecState extends State<ProductRec> {
 
 class ProductCard extends StatelessWidget {
   final dynamic product;
+
   const ProductCard({Key? key, required this.product}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    String productName = product['name'] ?? 'No Name';
-    String brand = product['brand'] ?? 'Unknown Brand';
-    String volume = product['volume'] != null ? "${product['volume']}" : 'N/A';
-    String price = product['price'] != null ? "LKR ${product['price']}" : 'Price not available';
-
     return Container(
-      padding: const EdgeInsets.all(1),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
         gradient: const LinearGradient(
@@ -165,48 +124,28 @@ class ProductCard extends StatelessWidget {
         ],
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.all(7.0),
+              padding: const EdgeInsets.all(9.0),
               child: Image.network(
                 product['imageUrl'] ?? '',
                 fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) =>
-                const Icon(Icons.image_not_supported, size: 50, color: Colors.white),
+                errorBuilder: (context, error, stackTrace) => const Icon(Icons.image_not_supported, size: 50, color: Colors.white),
               ),
             ),
           ),
-
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(8),
             decoration: const BoxDecoration(
               color: Color(0xFFE95B15),
               borderRadius: BorderRadius.vertical(top: Radius.circular(15), bottom: Radius.circular(15)),
             ),
-
             alignment: Alignment.centerLeft,
-            child: Column(
-              children: [
-                Text(
-                  "$brand $productName",
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                Text(
-                  "Volume: $volume",
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
-                ),
-                Text(
-                  price,
-                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-                ),
-              ],
+            child: Text(
+              product['name'] ?? 'No Name',
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
             ),
           ),
         ],
