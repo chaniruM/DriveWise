@@ -78,29 +78,6 @@ class _OBD2ScreenState extends State<OBD2Screen> {
     });
   }
 
-  // Future<void> _checkPermissionsAndListDevices() async {
-  //   if (await _requestBluetoothPermissions()) {
-  //     _listDevices();
-  //   } else {
-  //     print("Bluetooth permissions denied");
-  //   }
-  // }
-  //
-  // Future<bool> _requestBluetoothPermissions() async {
-  //   Map<Permission, PermissionStatus> statuses = await [
-  //     Permission.bluetooth,
-  //     Permission.bluetoothConnect,
-  //     Permission.bluetoothScan,
-  //     Permission.location,
-  //   ].request();
-  //
-  //   statuses.forEach((permission, status) {
-  //     print("Permission $permission: $status");
-  //   });
-  //
-  //   return statuses.values.every((status) => status.isGranted);
-  // }
-
   Future<void> _listDevices() async {
 
     FlutterBluePlus.startScan(

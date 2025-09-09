@@ -1,3 +1,4 @@
+import 'package:drivewise/pages/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:drivewise/MainPage.dart';
@@ -80,6 +81,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       home: isLoggedIn ? MainPage() : LoadingScreen(),
+      // home: MainPage(),
     );
   }
 }

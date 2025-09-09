@@ -9,7 +9,7 @@ class VehicleService {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('user_id');
   }
-  final String baseUrl = 'http://172.20.10.2:5100/api';
+  final String baseUrl = 'http://172.27.1.18:5100/api';
 
   // Fetch user's vehicles
   Future<Map<String, dynamic>> fetchUserVehicles() async {

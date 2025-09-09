@@ -106,7 +106,6 @@ class _TroubleCodePageState extends State<TroubleCodePage> {
           if (characteristic.properties.notify || characteristic.properties.read) {
             _readCharacteristic = characteristic;
             await _readCharacteristic!.setNotifyValue(true);
-            // We'll set up listeners specifically when needed, not here
           }
         }
       }
@@ -144,7 +143,7 @@ class _TroubleCodePageState extends State<TroubleCodePage> {
       return;
     }
 
-    // Create a single subscription to process all responses
+    // process all responses
     final subscription = _readCharacteristic!.value.listen(null);
     subscription.onData((data) {
       final response = utf8.decode(data).trim();

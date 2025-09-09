@@ -9,7 +9,7 @@ import 'package:drivewise/widgets/sessionExpiredScreen.dart';
 
 class ApiService {
   // Update baseUrl to include only the domain and port, not the /api/auth part
-  static const String baseUrl = "http://192.168.1.16:5000";
+  static const String baseUrl = "http://172.27.1.18:5100";
 
   // This makes it easier to create URLs for different API endpoints
   static String _apiUrl(String endpoint) => "$baseUrl$endpoint";

@@ -1,3 +1,4 @@
+import 'package:drivewise/pages/error_codes.dart';
 import 'package:flutter/material.dart';
 import 'package:drivewise/MainPage.dart';
 import 'package:drivewise/pages/quick_lookup_screen.dart';
@@ -265,7 +266,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => QuickLookupScreen()),
+                            builder: (context) => TroubleCodePage()),
                       );
                     },
                     child: Text(

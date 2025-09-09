@@ -9,7 +9,7 @@ class ProductRecService {
     try {
       print('Fetching products for category: $category');
       final response = await http.get(
-          Uri.parse('http://192.168.207.56:5000/api/products')
+          Uri.parse('http://13.60.205.213:5001/api/products')
       );
 
       if (response.statusCode == 200) {
